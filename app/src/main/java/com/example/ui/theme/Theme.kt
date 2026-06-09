@@ -12,33 +12,33 @@ import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.ui.graphics.Color
 
-private val DarkColorScheme = darkColorScheme(
-    primary = LightBloodRose,
-    secondary = RoseRedSecondary,
-    tertiary = SoftBurgundy,
-    background = HeavyBurgundy,
-    surface = CocoaSurface,
-    onPrimary = Color(0xFF6E000B),
+private val DarkColorScheme = lightColorScheme(
+    primary = BloodRed,
+    secondary = CrimsonRed,
+    tertiary = DeepBurgundy,
+    background = Color(0xFFFFFFFF),    // Pristine Pure White Background
+    surface = Color(0xFFF9FAFB),       // Soft aesthetic off-white surface
+    onPrimary = Color.White,
     onSecondary = Color.White,
-    onBackground = Color(0xFFFFEDED),
-    onSurface = Color(0xFFFFEDED)
+    onBackground = Color(0xFF1E1E1E),  // Dark text for super readability
+    onSurface = Color(0xFF1E1E1E)
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = BloodRed,
     secondary = CrimsonRed,
     tertiary = DeepBurgundy,
-    background = CleanCream,
-    surface = WarmRose,
+    background = Color(0xFFFFFFFF),    // Pristine Pure White Background
+    surface = Color(0xFFF9FAFB),       // Soft aesthetic off-white surface
     onPrimary = Color.White,
     onSecondary = Color.White,
-    onBackground = Color(0xFF351F20),
-    onSurface = Color(0xFF351F20)
+    onBackground = Color(0xFF1E1E1E),  // Dark text for super readability
+    onSurface = Color(0xFF1E1E1E)
 )
 
 @Composable
 fun MyApplicationTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false, // Force false by default to ensure app design is always bright and white as requested
     // Keep dynamic color toggleable but false by default to ensure blood donation red motif
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
