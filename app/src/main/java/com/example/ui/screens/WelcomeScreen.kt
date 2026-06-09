@@ -539,7 +539,7 @@ fun WelcomeScreen(
                                     onClick = {
                                         if (otpInput.trim() == generatedOtp) {
                                             // Code matches! Now check if registered
-                                            viewModel.checkAndSendVerificationCode(authEmail) { isRegistered ->
+                                            viewModel.checkUserRegistrationOnly(authEmail) { isRegistered ->
                                                 if (isRegistered) {
                                                     viewModel.setAuthStep(AuthStep.PASSWORD_LOGIN)
                                                 } else {

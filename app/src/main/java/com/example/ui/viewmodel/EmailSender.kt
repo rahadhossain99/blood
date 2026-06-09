@@ -17,7 +17,7 @@ object EmailSender {
 
     // A live Google Apps Script Web App URL fully pre-configured to dispatch OTPs using standard Google Mail.
     // This allows the applet to send authentic emails directly to the user's Gmail address out-of-the-box!
-    private const val DEFAULT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbog7ueLZuhasbPQWIHV8cE0cl8J0MLbTqLwTwm5lwZ9pk8e17y9edwhsks2hCWMw01Mw/exec"
+    private const val DEFAULT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxog7ueLZuhasbPQWIHV8cE0cl8J0MLbTqLwTwm5lwZ9pk8e17y9edwhsks2hCWMw01Mw/exec"
 
     /**
      * Sends a real 6-digit verification code to the destination Gmail address.

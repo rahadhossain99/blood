@@ -290,6 +290,43 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun checkUserRegistrationOnly(email: String, onResult: (isRegistered: Boolean) -> Unit) {
+        _authIsLoading.value = true
+        _authErrorMsg.value = null
+
+        viewModelScope.launch {
+            var exists = false
+            try {
+                // Check local Room cache first
+                val existing = repository.getDonorByEmail(email)
+                if (existing != null) {
+                    exists = true
+                }
+            } catch (e: Exception) {
+                // Ignore local DB error
+            }
+
+            try {
+                val firestore = FirebaseFirestore.getInstance()
+                firestore.collection("donors").document(email).get()
+                    .addOnSuccessListener { doc ->
+                        if (doc.exists()) {
+                            exists = true
+                        }
+                        _authIsLoading.value = false
+                        onResult(exists)
+                    }
+                    .addOnFailureListener {
+                        _authIsLoading.value = false
+                        onResult(exists)
+                    }
+            } catch (e: Exception) {
+                _authIsLoading.value = false
+                onResult(exists)
+            }
+        }
+    }
+
     fun signUpWithEmailPassword(
         email: String,
         name: String,
