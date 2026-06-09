@@ -122,7 +122,7 @@ fun WelcomeScreen(
         }
     }
 
-    Box(
+    Column(
         modifier = modifier
             .fillMaxSize()
             .background(
@@ -135,13 +135,9 @@ fun WelcomeScreen(
             )
             .verticalScroll(scrollState)
             .padding(24.dp),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
-        ) {
             Spacer(modifier = Modifier.height(20.dp))
 
             // Pulse Blood Ring Graphic Accent
@@ -746,7 +742,6 @@ fun WelcomeScreen(
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-        }
     }
 }
 

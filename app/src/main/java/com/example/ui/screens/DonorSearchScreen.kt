@@ -91,173 +91,182 @@ fun DonorSearchScreen(
         "Sharsha" to "শার্শা"
     )
 
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Search text outline input
-        OutlinedTextField(
-            value = searchTerms,
-            onValueChange = { viewModel.setSearchQuery(it) },
-            placeholder = { Text("এলাকা, ডোনার নাম বা ফোন নাম্বার দিয়ে খুঁজুন...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-            singleLine = true,
-            shape = RoundedCornerShape(16.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f)
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("search_input_field")
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Blood group scrollable chip shelf
-        Text(
-            text = "রক্তের গ্রুপ ফিল্টার:",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(bloodGroups) { group ->
-                val isSelected = activeGroupFilter == group
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { viewModel.setBloodGroupFilter(group) },
-                    label = { Text(group, fontWeight = FontWeight.Bold) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = Color.White
-                    ),
-                    modifier = Modifier.testTag("group_filter_$group")
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Division flow shelf
-        Text(
-            text = "উপজেলা ফিল্টার:",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            divisions.forEach { (eng, bng) ->
-                val isSelected = activeDivisionFilter == eng
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { viewModel.setDivisionFilter(eng) },
-                    label = { Text(bng, fontSize = 11.sp, fontWeight = FontWeight.Medium) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.secondary,
-                        selectedLabelColor = Color.White,
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                    ),
-                    modifier = Modifier.testTag("div_filter_$eng")
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        JashoreUpazilaMap(
-            selectedUpazila = activeDivisionFilter,
-            onUpazilaSelected = { viewModel.setDivisionFilter(it) }
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Donors count bar
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "ডোনারদের তালিকা",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Text(
-                text = "মোট: ${donorList.size} জন",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Donors List
-        if (donorList.isEmpty()) {
-            Box(
+            // Search text outline input
+            OutlinedTextField(
+                value = searchTerms,
+                onValueChange = { viewModel.setSearchQuery(it) },
+                placeholder = { Text("এলাকা, ডোনার নাম বা ফোন নাম্বার দিয়ে খুঁজুন...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f)
+                ),
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .testTag("search_input_field")
+            )
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Blood group scrollable chip shelf
+            Text(
+                text = "রক্তের গ্রুপ ফিল্টার:",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(32.dp)
+                items(bloodGroups) { group ->
+                    val isSelected = activeGroupFilter == group
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { viewModel.setBloodGroupFilter(group) },
+                        label = { Text(group, fontWeight = FontWeight.Bold) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = Color.White
+                        ),
+                        modifier = Modifier.testTag("group_filter_$group")
+                    )
+                }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Division flow shelf
+            Text(
+                text = "উপজেলা ফিল্টার:",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                divisions.forEach { (eng, bng) ->
+                    val isSelected = activeDivisionFilter == eng
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { viewModel.setDivisionFilter(eng) },
+                        label = { Text(bng, fontSize = 11.sp, fontWeight = FontWeight.Medium) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.secondary,
+                            selectedLabelColor = Color.White,
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        ),
+                        modifier = Modifier.testTag("div_filter_$eng")
+                    )
+                }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(10.dp))
+
+            JashoreUpazilaMap(
+                selectedUpazila = activeDivisionFilter,
+                onUpazilaSelected = { viewModel.setDivisionFilter(it) }
+            )
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Donors count bar
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "ডোনারদের তালিকা",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = "মোট: ${donorList.size} জন",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        if (donorList.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.SentimentVeryDissatisfied,
-                        contentDescription = "Empty State",
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                        modifier = Modifier.size(56.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "দুঃখিত! এই ফিল্টারে কোনো রক্তদাতা পাওয়া যায়নি।",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
-                    )
-                    Text(
-                        text = "অন্য কোনো এলাকা বা রক্তের গ্রুপ নির্বাচন করে দেখুন।",
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.SentimentVeryDissatisfied,
+                            contentDescription = "Empty State",
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                            modifier = Modifier.size(56.dp)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "দুঃখিত! এই ফিল্টারে কোনো রক্তদাতা পাওয়া যায়নি।",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                        )
+                        Text(
+                            text = "অন্য কোনো এলাকা বা রক্তের গ্রুপ নির্বাচন করে দেখুন।",
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                 }
             }
         } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(donorList, key = { it.id }) { donor ->
-                    DonorRow(donor = donor, onCallClicked = { phone ->
-                        try {
-                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            // Handler for non-cellular devices
-                        }
-                    })
-                }
+            items(donorList, key = { it.id }) { donor ->
+                DonorRow(donor = donor, onCallClicked = { phone ->
+                    try {
+                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        // Handler for non-cellular devices
+                    }
+                })
             }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
