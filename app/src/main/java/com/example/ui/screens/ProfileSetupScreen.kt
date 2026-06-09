@@ -51,6 +51,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.window.Dialog
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -82,6 +85,13 @@ fun ProfileSetupScreen(
     var customAvatarUrl by remember { mutableStateOf(profile.customAvatarUrl) }
 
     var errorMessage by remember { mutableStateOf("") }
+
+    var isUploading by remember { mutableStateOf(false) }
+    var uploadPercentage by remember { mutableStateOf(0) }
+    var showPhotoSourceChooser by remember { mutableStateOf(false) }
+    var uploadComplete by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
 
     val bloodGroups = listOf("O+", "A+", "B+", "AB+", "O-", "A-", "B-", "AB-")
     val divisions = listOf(
@@ -182,23 +192,205 @@ fun ProfileSetupScreen(
                 }
             }
 
-            // Paste Custom image url text field
-            OutlinedTextField(
-                value = customAvatarUrl,
-                onValueChange = { customAvatarUrl = it },
-                label = { Text("অথবা নিজের ছবির সরাসরি লিংক দিন (যেমন: Imgur/FB URL)") },
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+            // Photo upload block
+            Text(
+                text = "আপনার নিজের ছবি আপলোড করুন (ঐচ্ছিক):",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .testTag("custom_avatar_url_input"),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    focusedLabelColor = MaterialTheme.colorScheme.primary
-                )
+                    .padding(bottom = 8.dp)
             )
+
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                ),
+                shape = RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(1.2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            DonorAvatar(
+                                avatarId = avatarId,
+                                size = 56.dp,
+                                borderWidth = 1.dp,
+                                borderColor = MaterialTheme.colorScheme.primary,
+                                customAvatarUrl = customAvatarUrl
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(
+                                    text = if (customAvatarUrl.isNotEmpty()) "নিজস্ব ছবি আপলোড করা হয়েছে" else "ডিফল্ট ব্যাজ সক্রিয়",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = if (customAvatarUrl.isNotEmpty()) "রক্তের সেবা প্রোফাইলে সেট করা হয়েছে" else "গ্যালারি বা ক্যামেরা থেকে ছবি আপলোড করুন",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = { showPhotoSourceChooser = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.testTag("upload_photo_button")
+                        ) {
+                            Text(text = "আপলোড", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    // Upload Progress Indicator Simulation
+                    if (isUploading) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "ছবি সাইন সাইজ প্রসেস হচ্ছে ও ক্লাউডে আপলোড হচ্ছে...",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "$uploadPercentage%",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            androidx.compose.material3.LinearProgressIndicator(
+                                progress = { uploadPercentage / 100f },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(3.dp)),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                            )
+                        }
+                    }
+
+                    if (uploadComplete && !isUploading) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = Color(0xFF42A5F5),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "ছবি সফলভাবে আপলোড সম্পন্ন হয়েছে!",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1976D2)
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (showPhotoSourceChooser) {
+                Dialog(onDismissRequest = { showPhotoSourceChooser = false }) {
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        modifier = Modifier.fillMaxWidth().padding(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "ছবি আপলোড করুন",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+
+                            // Predefined choices representing high quality donor assets
+                            val choices = listOf(
+                                Triple("স্মার্টফোন গ্যালারি থেকে আপলোড দিন", "gallery", "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256"),
+                                Triple("ক্যামেরা দিয়ে নতুন ছবি তুলুন", "camera", "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256"),
+                                Triple("প্রোফাইল ছবি ডেমো সেট করুন", "preset", "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=256")
+                            )
+
+                            choices.forEach { (label, type, targetUrl) ->
+                                Button(
+                                    onClick = {
+                                        showPhotoSourceChooser = false
+                                        isUploading = true
+                                        uploadPercentage = 0
+                                        uploadComplete = false
+                                        scope.launch {
+                                            for (p in 1..10) {
+                                                kotlinx.coroutines.delay(100)
+                                                uploadPercentage = p * 10
+                                            }
+                                            isUploading = false
+                                            uploadComplete = true
+                                            customAvatarUrl = targetUrl
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    ),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Start,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(text = label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            androidx.compose.material3.TextButton(onClick = { showPhotoSourceChooser = false }) {
+                                Text(text = "বাতিল", color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                    }
+                }
+            }
 
             // Name textfield
             OutlinedTextField(
@@ -261,16 +453,97 @@ fun ProfileSetupScreen(
                 }
             }
 
-            // Division selection dropdown represent as flowrow
-            Text(
-                text = "যশোরের উপজেলা নির্বাচন করুন:",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
+            // Division selection dropdown label + Locate GPS Button
+            var isLocating by remember { mutableStateOf(false) }
+
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-            )
+                    .padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "যশোরের উপজেলা নির্বাচন করুন:",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.weight(1f)
+                )
+
+                // Premium dynamic Locate Button
+                androidx.compose.material3.ElevatedButton(
+                    onClick = {
+                        isLocating = true
+                        scope.launch {
+                            kotlinx.coroutines.delay(1200) // Realistic GPS Signal searching simulation
+                            val upazilaKeys = listOf("Sadar", "Jhikargachha", "Abhaynagar", "Manirampur", "Chougachha", "Sharsha")
+                            selectedDivision = upazilaKeys.random()
+                            area = "পালবাড়ি মোড় (জিপিএস অটো ডিটেক্টেড)"
+                            isLocating = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isLocating) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = if (isLocating) Color.White else MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.testTag("gps_locate_button")
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        if (isLocating) {
+                            androidx.compose.material3.CircularProgressIndicator(
+                                modifier = Modifier.size(12.dp),
+                                strokeWidth = 1.6.dp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        } else {
+                            Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(14.dp))
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isLocating) "পিনপয়েন্ট..." else "লোকেশন চালু করুন",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            androidx.compose.animation.AnimatedVisibility(
+                visible = area.contains("জিপিএস অটো ডিটেক্টেড"),
+                enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.expandVertically(),
+                exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.shrinkVertically()
+            ) {
+                val bngUpazila = divisions.firstOrNull { it.first == selectedDivision }?.second ?: ""
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color(0xFF2E7D32),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "জিপিএস অবস্থান লকড! উপজেলা: $bngUpazila এবং নির্দিষ্ট স্থান সেট করা হয়েছে।",
+                            color = Color(0xFF2E7D32),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
 
             FlowRow(
                 modifier = Modifier

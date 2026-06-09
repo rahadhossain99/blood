@@ -119,8 +119,8 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                     Donor(
                         name = account.name,
                         bloodGroup = "O+",
-                        division = "Dhaka",
-                        area = "",
+                        division = "Sadar",
+                        area = "যশোর সদর",
                         phone = "",
                         email = account.email,
                         avatarId = account.imageUrlPlaceholder,
@@ -130,6 +130,32 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 )
             }
+        }
+    }
+
+    fun signInOrRegisterCustomGoogleAccount(email: String, name: String, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            _loggedInEmail.value = email
+            val existingProfile = repository.getDonorByEmail(email)
+            if (existingProfile != null) {
+                repository.saveCurrentUser(existingProfile.copy(isCurrentUser = true))
+            } else {
+                repository.saveCurrentUser(
+                    Donor(
+                        name = name,
+                        bloodGroup = "O+",
+                        division = "Sadar",
+                        area = "যশোর সদর",
+                        phone = "",
+                        email = email,
+                        avatarId = (1..10).random(),
+                        isAvailable = true,
+                        lastDonationDate = "কখনো নয়",
+                        isCurrentUser = true
+                    )
+                )
+            }
+            onComplete()
         }
     }
 

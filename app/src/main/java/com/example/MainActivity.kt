@@ -69,14 +69,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                androidx.compose.foundation.layout.Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    com.example.ui.screens.SimulatedMobileStatusBar()
-                    Box(modifier = Modifier.weight(1f)) {
-                        MainAppHost(viewModel = viewModel)
-                    }
-                }
+                MainAppHost(viewModel = viewModel)
             }
         }
     }
@@ -161,7 +154,8 @@ fun MainAppHost(viewModel: BloodViewModel) {
                                 DonorAvatar(
                                     avatarId = user.avatarId,
                                     size = 32.dp,
-                                    borderWidth = 1.dp
+                                    borderWidth = 1.dp,
+                                    customAvatarUrl = user.customAvatarUrl
                                 )
                             }
                         },
