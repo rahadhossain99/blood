@@ -41,6 +41,9 @@ interface DonorDao {
     @Query("SELECT COUNT(*) FROM donors WHERE isCurrentUser = 0")
     suspend fun getOtherDonorCount(): Int
 
+    @Query("DELETE FROM donors WHERE isCurrentUser = 1")
+    suspend fun deleteCurrentUser()
+
     @Query("DELETE FROM donors WHERE id = :id")
     suspend fun deleteDonorById(id: Int)
 }

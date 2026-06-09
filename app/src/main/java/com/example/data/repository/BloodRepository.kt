@@ -144,6 +144,10 @@ class BloodRepository(
         }
     }
 
+    suspend fun clearCurrentUser() {
+        donorDao.deleteCurrentUser()
+    }
+
     suspend fun getDonorByEmail(email: String): Donor? {
         return donorDao.getDonorByEmail(email)
     }

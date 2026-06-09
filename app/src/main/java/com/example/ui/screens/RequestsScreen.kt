@@ -5,6 +5,11 @@ import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -65,6 +70,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -93,6 +109,48 @@ fun RequestsScreen(
     val userProfile by viewModel.currentUserProfile.collectAsState()
 
     var showPostDialog by remember { mutableStateOf(false) }
+
+    // --- Notification Logic ---
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { /* handle result */ }
+    )
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel("blood_request_channel", "জরুরি রক্তের আবেদন", NotificationManager.IMPORTANCE_HIGH)
+            channel.description = "নতুন রক্তের আবেদনের স্পেশাল নোটিফিকেশন"
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    var previousListSize by remember { mutableStateOf(requestsList.size) }
+    LaunchedEffect(requestsList.size) {
+        if (requestsList.size > previousListSize) {
+            // A new request was added
+            val newReq = requestsList.firstOrNull() // assuming latest is at the top
+            if (newReq != null && newReq.requestedBy != userProfile?.name) {
+                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val builder = NotificationCompat.Builder(context, "blood_request_channel")
+                    .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                    .setContentTitle("জরুরি রক্তের প্রয়োজন: ${newReq.bloodGroup}")
+                    .setContentText("${newReq.area} এলাকায় রক্তের প্রয়োজন। এখনই সাহায্য করুন!")
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setAutoCancel(true)
+
+                notificationManager.notify(newReq.id.hashCode(), builder.build())
+            }
+        }
+        previousListSize = requestsList.size
+    }
+    // --- End Notification Logic ---
 
     // Form states
     var patientName by remember { mutableStateOf("") }
@@ -601,14 +659,27 @@ fun RequestCard(
         else -> request.division
     }
 
-    ElevatedCard(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+    val infiniteTransition = rememberInfiniteTransition(label = "pulseGlow")
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.2f,
+        targetValue = 0.9f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200),
+            repeatMode = RepeatMode.Reverse
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        label = "glowAlphaAnimation"
+    )
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1E1E1E)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.5.dp, Color(0xFFFF1744).copy(alpha = glowAlpha)), // Blinking Neon Red
         modifier = Modifier
             .fillMaxWidth()
+            .padding(vertical = 4.dp)
             .testTag("request_card_${request.id}")
     ) {
         Column(
@@ -647,7 +718,7 @@ fun RequestCard(
                         Text(
                             text = "রোগী: ${request.patientName}",
                             fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.61f)
+                            color = Color.White.copy(alpha = 0.8f)
                         )
                     }
                 }
@@ -662,7 +733,7 @@ fun RequestCard(
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = "পোস্ট ডিলিট করুন",
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                                tint = Color(0xFFFF1744).copy(alpha = 0.9f)
                             )
                         }
                     }
@@ -671,7 +742,7 @@ fun RequestCard(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF4CAF50))
+                            .background(Color(0xFFFF1744)) // Neon red call
                             .clickable { onCallClicked(request.phone) }
                             .testTag("call_requester_${request.id}"),
                         contentAlignment = Alignment.Center
@@ -704,7 +775,7 @@ fun RequestCard(
                     text = request.hospitalName,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = Color.White
                 )
             }
 
@@ -724,7 +795,7 @@ fun RequestCard(
                 Text(
                     text = "$banglaDivision, ${request.area}",
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    color = Color.White.copy(alpha = 0.7f)
                 )
             }
 
@@ -735,7 +806,7 @@ fun RequestCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(0.8.dp)
-                    .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f))
+                    .background(Color.White.copy(alpha = 0.1f))
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -757,7 +828,7 @@ fun RequestCard(
                         text = "তারিখ: ${request.neededDate}",
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = Color.White
                     )
                 }
 
@@ -773,7 +844,7 @@ fun RequestCard(
                         text = "সময়: ${request.neededTime}",
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = Color.White
                     )
                 }
             }
@@ -783,14 +854,14 @@ fun RequestCard(
                 Card(
                     shape = RoundedCornerShape(10.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        containerColor = Color.White.copy(alpha = 0.05f)
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = "অন্যান্য বিবরণ: ${request.details}",
                         fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Color.White.copy(alpha = 0.8f),
                         modifier = Modifier.padding(10.dp)
                     )
                 }
@@ -803,7 +874,7 @@ fun RequestCard(
                 text = "আবেদনকারী: ${request.requestedBy}",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.45f)
+                color = Color.White.copy(alpha = 0.45f)
             )
         }
     }

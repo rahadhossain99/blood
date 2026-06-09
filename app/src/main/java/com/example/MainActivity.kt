@@ -5,12 +5,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.with
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -43,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,8 +86,8 @@ fun MainAppHost(viewModel: BloodViewModel) {
     val currentUserProfile by viewModel.currentUserProfile.collectAsState()
 
     // Screen toggles or local navigation controls
-    var activeTab by remember { mutableIntStateOf(0) }
-    var forceEditMode by remember { mutableStateOf(false) }
+    var activeTab by rememberSaveable { mutableIntStateOf(0) }
+    var forceEditMode by rememberSaveable { mutableStateOf(false) }
 
     when {
         // Step 1: User is not logged in with any Google account -> Show Greeting card and Google button
@@ -96,8 +100,8 @@ fun MainAppHost(viewModel: BloodViewModel) {
             val defaultProfile = currentUserProfile ?: com.example.data.model.Donor(
                 name = "নতুন দাতা",
                 bloodGroup = "O+",
-                division = "Dhaka",
-                area = "",
+                division = "ঢাকা",
+                area = "যশোর সদর",
                 phone = "",
                 email = loggedInEmail ?: "",
                 isCurrentUser = true
@@ -140,23 +144,49 @@ fun MainAppHost(viewModel: BloodViewModel) {
                         },
                         actions = {
                             // Display the user's avatar in the appbar highlighting their account status
-                            Row(
-                                modifier = Modifier.padding(end = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "হ্যালো, ${user.name.takeWhile { it != ' ' }}",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                DonorAvatar(
-                                    avatarId = user.avatarId,
-                                    size = 32.dp,
-                                    borderWidth = 1.dp,
-                                    customAvatarUrl = user.customAvatarUrl
-                                )
+                            var showMenu by remember { mutableStateOf(false) }
+
+                            Box {
+                                Row(
+                                    modifier = Modifier
+                                        .padding(end = 16.dp)
+                                        .clickable { showMenu = true },
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "হ্যালো, ${user.name.takeWhile { it != ' ' }}",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    DonorAvatar(
+                                        avatarId = user.avatarId,
+                                        size = 32.dp,
+                                        borderWidth = 1.dp,
+                                        customAvatarUrl = user.customAvatarUrl
+                                    )
+                                }
+
+                                androidx.compose.material3.DropdownMenu(
+                                    expanded = showMenu,
+                                    onDismissRequest = { showMenu = false }
+                                ) {
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = { Text("প্রোফাইল আপডেট করুন") },
+                                        onClick = {
+                                            showMenu = false
+                                            forceEditMode = true
+                                        }
+                                    )
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = { Text("লগ-আউট (Logout)") },
+                                        onClick = {
+                                            showMenu = false
+                                            viewModel.logout()
+                                        }
+                                    )
+                                }
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
@@ -237,11 +267,16 @@ fun MainAppHost(viewModel: BloodViewModel) {
                         targetState = activeTab,
                         transitionSpec = {
                             if (targetState > initialState) {
-                                slideInHorizontally { width -> width } with slideOutHorizontally { width -> -width }
+                                slideInHorizontally(animationSpec = spring(stiffness = Spring.StiffnessLow)) { width -> width }.togetherWith(
+                                    slideOutHorizontally(animationSpec = spring(stiffness = Spring.StiffnessLow)) { width -> -width }
+                                )
                             } else {
-                                slideInHorizontally { width -> -width } with slideOutHorizontally { width -> width }
+                                slideInHorizontally(animationSpec = spring(stiffness = Spring.StiffnessLow)) { width -> -width }.togetherWith(
+                                    slideOutHorizontally(animationSpec = spring(stiffness = Spring.StiffnessLow)) { width -> width }
+                                )
                             }
-                        }
+                        },
+                        label = "MainTabTransition"
                     ) { targetTab ->
                         when (targetTab) {
                             0 -> DonorSearchScreen(viewModel = viewModel)

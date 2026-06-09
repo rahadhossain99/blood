@@ -226,6 +226,19 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // New Custom Email authentication functions
+    fun logout() {
+        viewModelScope.launch {
+            try {
+                FirebaseAuth.getInstance().signOut()
+            } catch (e: Exception) {
+                // Ignore
+            }
+            _loggedInEmail.value = null
+            repository.clearCurrentUser()
+            resetAuthFlow()
+        }
+    }
+
     fun resetAuthFlow() {
         _authStep.value = AuthStep.EMAIL_INPUT
         _authEmail.value = ""

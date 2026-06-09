@@ -50,6 +50,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -272,6 +280,7 @@ fun DonorRow(
     onCallClicked: (String) -> Unit
 ) {
     var showDetails by remember { mutableStateOf(false) }
+    var visible by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val isReady = donor.isAvailable
     val banglaDivision = when (donor.division) {
@@ -286,17 +295,30 @@ fun DonorRow(
         else -> donor.division
     }
 
-    ElevatedCard(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { showDetails = true }
-            .testTag("donor_card_${donor.id}")
+    LaunchedEffect(Unit) {
+        visible = true
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically(
+            initialOffsetY = { it },
+            animationSpec = spring(stiffness = Spring.StiffnessLow)
+        ) + fadeIn(animationSpec = tween(500)),
+        modifier = Modifier.fillMaxWidth()
     ) {
+        ElevatedCard(
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF121212) // OLED dark card
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+                .clickable { showDetails = true }
+                .testTag("donor_card_${donor.id}")
+        ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -330,7 +352,7 @@ fun DonorRow(
                     text = donor.name,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = Color.White
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -347,7 +369,7 @@ fun DonorRow(
                     Text(
                         text = "$banglaDivision • ${donor.area}",
                         fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.65f)
+                        color = Color.White.copy(alpha = 0.65f)
                     )
                 }
 
@@ -366,13 +388,13 @@ fun DonorRow(
                         text = if (isReady) "অ্যাভেলেবল (প্রস্তুত)" else "বিরতিতে আছেন",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isReady) Color(0xFF2E7D32) else Color(0xFFD84315)
+                        color = if (isReady) Color(0xFF81C784) else Color(0xFFFFB74D) // Lighter colors for dark mode
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "শেষ দান: ${donor.lastDonationDate}",
                         fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                        color = Color.White.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -419,7 +441,8 @@ fun DonorRow(
                 }
             }
         }
-    }
+    } // Close ElevatedCard
+    } // Close AnimatedVisibility
 
     if (showDetails) {
         Dialog(onDismissRequest = { showDetails = false }) {
@@ -513,37 +536,7 @@ fun DonorRow(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Maps Route Button
-                    Button(
-                        onClick = {
-                            try {
-                                val addressQuery = "${donor.area}, $banglaDivision, Jashore, Bangladesh"
-                                val intent = Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://www.google.com/maps/search/?api=1&query=${Uri.encode(addressQuery)}")
-                                )
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                // Handled safely
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1672EC) // Soft Premium Google Map Blue
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("গুগল ম্যাপসে রুট দেখুন", color = Color.White, fontWeight = FontWeight.Bold)
-                        }
-                    }
+                    // Maps Route Button (REMOVED)
 
                     Spacer(modifier = Modifier.height(12.dp))
 

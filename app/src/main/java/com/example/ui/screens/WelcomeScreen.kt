@@ -7,6 +7,10 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -60,6 +64,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -128,14 +133,7 @@ fun WelcomeScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-                    )
-                )
-            )
+            .background(Color(0xFF000000)) // OLED Black background
             .statusBarsPadding()
             .navigationBarsPadding()
             .verticalScroll(scrollState)
@@ -146,16 +144,31 @@ fun WelcomeScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             // Pulse Blood Ring Graphic Accent
+            val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+            val pulseScale by infiniteTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 1.15f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(1000),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "pulseScale"
+            )
+
             Box(
                 modifier = Modifier
                     .size(90.dp)
+                    .graphicsLayer {
+                        scaleX = pulseScale
+                        scaleY = pulseScale
+                    }
                     .shadow(8.dp, RoundedCornerShape(45.dp), clip = false)
                     .clip(RoundedCornerShape(45.dp))
                     .background(
                         Brush.radialGradient(
                             colors = listOf(
-                                Color(0xFFFF8A80),
-                                MaterialTheme.colorScheme.primary
+                                Color(0xFFFF1744), // Neon Red
+                                Color(0xFFD50000)
                             )
                         )
                     ),
@@ -211,12 +224,12 @@ fun WelcomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Interactive Dynamic Auth Card Widget
+            // Interactive Dynamic Auth Card Widget (Glassmorphic)
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    containerColor = Color(0xFF1E1E1E).copy(alpha = 0.85f)
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -386,11 +399,11 @@ fun WelcomeScreen(
                         }
                     }
 
-                    // Display errors beautifully
+                    // Display errors beautifully with Neon Red
                     authErrorMsg?.let { msg ->
                         Card(
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer
+                                containerColor = Color(0x22FF1744) // Transparent Neon Red Background
                             ),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
@@ -404,15 +417,15 @@ fun WelcomeScreen(
                                 Icon(
                                     imageVector = Icons.Default.Info,
                                     contentDescription = "Error info",
-                                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                                    tint = Color(0xFFFF1744), // Neon Red Icon
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = msg,
-                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    color = Color(0xFFFF1744), // Neon Red Text
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Bold,
                                     lineHeight = 15.sp
                                 )
                             }
