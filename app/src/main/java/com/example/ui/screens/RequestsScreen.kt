@@ -646,6 +646,7 @@ fun RequestCard(
     onDeleteClicked: (BloodRequest) -> Unit
 ) {
     val showDelete = currentUserName.isNotEmpty() && request.requestedBy.equals(currentUserName, ignoreCase = true)
+    val context = LocalContext.current
 
     val banglaDivision = when (request.division) {
         "Sadar" -> "যশোর সদর"
@@ -672,11 +673,11 @@ fun RequestCard(
 
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1E1E1E)
+            containerColor = Color.White
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(1.5.dp, Color(0xFFFF1744).copy(alpha = glowAlpha)), // Blinking Neon Red
+        border = BorderStroke(1.2.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha)), // Dynamic glowing accent border
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
@@ -718,7 +719,7 @@ fun RequestCard(
                         Text(
                             text = "রোগী: ${request.patientName}",
                             fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.8f)
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
                         )
                     }
                 }
@@ -775,7 +776,7 @@ fun RequestCard(
                     text = request.hospitalName,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
@@ -795,7 +796,7 @@ fun RequestCard(
                 Text(
                     text = "$banglaDivision, ${request.area}",
                     fontSize = 12.sp,
-                    color = Color.White.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 )
             }
 
@@ -806,7 +807,7 @@ fun RequestCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(0.8.dp)
-                    .background(Color.White.copy(alpha = 0.1f))
+                    .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f))
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -828,7 +829,7 @@ fun RequestCard(
                         text = "তারিখ: ${request.neededDate}",
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
 
@@ -844,7 +845,7 @@ fun RequestCard(
                         text = "সময়: ${request.neededTime}",
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
@@ -854,14 +855,14 @@ fun RequestCard(
                 Card(
                     shape = RoundedCornerShape(10.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.White.copy(alpha = 0.05f)
+                        containerColor = Color(0xFFFFF1F2) // Soft elegant warm light pink
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = "অন্যান্য বিবরণ: ${request.details}",
                         fontSize = 11.sp,
-                        color = Color.White.copy(alpha = 0.8f),
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
                         modifier = Modifier.padding(10.dp)
                     )
                 }
@@ -869,12 +870,54 @@ fun RequestCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Google Maps button for location finding
+            Button(
+                onClick = {
+                    try {
+                        val query = "${request.hospitalName} ${banglaDivision}, Jessore, Bangladesh"
+                        val uri = "https://www.google.com/maps/search/?api=1&query=" + android.net.Uri.encode(query)
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(uri))
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        // Fallback
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4285F4) // Google Maps Blue color!
+                ),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(38.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "গুগল ম্যাপে হাসপাতালটি দেখুন (${banglaDivision})",
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             // Requester label subtitle
             Text(
                 text = "আবেদনকারী: ${request.requestedBy}",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.White.copy(alpha = 0.45f)
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
             )
         }
     }

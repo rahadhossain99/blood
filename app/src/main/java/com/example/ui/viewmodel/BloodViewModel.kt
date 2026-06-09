@@ -245,6 +245,37 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
         _generatedOtp.value = ""
         _authIsLoading.value = false
         _authErrorMsg.value = null
+        _isPasswordResetFlow.value = false
+    }
+
+    private val _isPasswordResetFlow = MutableStateFlow(false)
+    val isPasswordResetFlow = _isPasswordResetFlow.asStateFlow()
+
+    fun setPasswordResetFlow(enabled: Boolean) {
+        _isPasswordResetFlow.value = enabled
+    }
+
+    fun resetUserPassword(
+        email: String,
+        passwordInput: String,
+        onComplete: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        _authIsLoading.value = true
+        _authErrorMsg.value = null
+        _isPasswordResetFlow.value = false // reset flag
+
+        viewModelScope.launch {
+            try {
+                _loggedInEmail.value = email
+                restoreLocalOrCreateDefault(email)
+                _authIsLoading.value = false
+                onComplete()
+            } catch (e: Exception) {
+                _authIsLoading.value = false
+                onError(e.localizedMessage ?: "পাসওয়ার্ড রিসেট সম্পন্ন করা যায়নি।")
+            }
+        }
     }
 
     fun setAuthStep(step: AuthStep) {

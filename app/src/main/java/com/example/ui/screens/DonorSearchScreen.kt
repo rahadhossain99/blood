@@ -108,6 +108,45 @@ fun DonorSearchScreen(
         item {
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Beautiful Welcoming Header Banner
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
+                ),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Bloodtype,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(44.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = "জীবন বাঁচানোর সাথী হোন",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "আপনার এলাকায় স্বেচ্ছাসেবী রক্তদাতাদের সহজেই খুঁজুন এবং প্রয়োজনীয় রক্তের প্রয়োজনে পাশে দাঁড়ান।",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+            }
+
             // Search text outline input
             OutlinedTextField(
                 value = searchTerms,
@@ -309,9 +348,9 @@ fun DonorRow(
     ) {
         ElevatedCard(
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF121212) // OLED dark card
+                containerColor = Color.White // Pristine white card for maximum legibility!
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.5.dp),
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -352,7 +391,7 @@ fun DonorRow(
                     text = donor.name,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -369,7 +408,7 @@ fun DonorRow(
                     Text(
                         text = "$banglaDivision • ${donor.area}",
                         fontSize = 11.sp,
-                        color = Color.White.copy(alpha = 0.65f)
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.65f)
                     )
                 }
 
@@ -388,13 +427,13 @@ fun DonorRow(
                         text = if (isReady) "অ্যাভেলেবল (প্রস্তুত)" else "বিরতিতে আছেন",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isReady) Color(0xFF81C784) else Color(0xFFFFB74D) // Lighter colors for dark mode
+                        color = if (isReady) Color(0xFF2E7D32) else Color(0xFFE65100) // Darker readable colors for white background
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "শেষ দান: ${donor.lastDonationDate}",
                         fontSize = 10.sp,
-                        color = Color.White.copy(alpha = 0.5f)
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -536,7 +575,44 @@ fun DonorRow(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Maps Route Button (REMOVED)
+                    // Maps Route Button to open Google Maps dynamically!
+                    Button(
+                        onClick = {
+                            try {
+                                val query = "${donor.area} ${banglaDivision}, Jessore, Bangladesh"
+                                val uri = "https://www.google.com/maps/search/?api=1&query=" + android.net.Uri.encode(query)
+                                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(uri))
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                // Fallback
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4285F4) // Google Maps Blue color!
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(46.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "গুগল ম্যাপে এলাকা দেখুন (${banglaDivision})",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(12.dp))
 

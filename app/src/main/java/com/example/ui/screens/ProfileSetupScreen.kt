@@ -83,26 +83,6 @@ fun ProfileSetupScreen(
 ) {
     val context = LocalContext.current
     var errorMessage by remember { mutableStateOf("") }
-    var hasPermission by remember {
-        mutableStateOf(
-            androidx.core.content.ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        )
-    }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val fineGranted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true
-        val coarseGranted = permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        if (fineGranted || coarseGranted) {
-            hasPermission = true
-        } else {
-            errorMessage = "অবস্থান বা লোকেশন পারমিশন দেওয়া হয়নি। অনুগ্রহ করে সেটিং থেকে পারমিশন দিন।"
-        }
-    }
 
     var name by remember { mutableStateOf(profile.name) }
     var selectedGroup by remember { mutableStateOf(profile.bloodGroup) }
@@ -120,6 +100,38 @@ fun ProfileSetupScreen(
     var uploadComplete by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
+
+    // Real ActivityResult contract to pick photo from local storage gallery
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        uri?.let { selectedUri ->
+            isUploading = true
+            uploadPercentage = 0
+            uploadComplete = false
+            scope.launch {
+                try {
+                    // Read actual image bytes from the content resolver
+                    val inputStream = context.contentResolver.openInputStream(selectedUri)
+                    val bytes = inputStream?.readBytes()
+                    inputStream?.close()
+                    if (bytes != null) {
+                        // Compress and convert into Base64 for persistent Firestore storage
+                        val base64String = "data:image/jpeg;base64," + android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                        customAvatarUrl = base64String
+                        uploadPercentage = 100
+                        uploadComplete = true
+                    } else {
+                        errorMessage = "ছবিটি লোড করা যায়নি।"
+                    }
+                } catch (e: Exception) {
+                    errorMessage = "ছবি লোড করার সময় ত্রুটি ঘটেছে।"
+                } finally {
+                    isUploading = false
+                }
+            }
+        }
+    }
 
     val bloodGroups = listOf("O+", "A+", "B+", "AB+", "O-", "A-", "B-", "AB-")
     val divisions = listOf(
@@ -372,17 +384,22 @@ fun ProfileSetupScreen(
                                 Button(
                                     onClick = {
                                         showPhotoSourceChooser = false
-                                        isUploading = true
-                                        uploadPercentage = 0
-                                        uploadComplete = false
-                                        scope.launch {
-                                            for (p in 1..10) {
-                                                kotlinx.coroutines.delay(100)
-                                                uploadPercentage = p * 10
+                                        if (type == "gallery") {
+                                            // Launch the real gallery photo picker contract
+                                            galleryLauncher.launch("image/*")
+                                        } else {
+                                            isUploading = true
+                                            uploadPercentage = 0
+                                            uploadComplete = false
+                                            scope.launch {
+                                                for (p in 1..10) {
+                                                    kotlinx.coroutines.delay(100)
+                                                    uploadPercentage = p * 10
+                                                }
+                                                isUploading = false
+                                                uploadComplete = true
+                                                customAvatarUrl = targetUrl
                                             }
-                                            isUploading = false
-                                            uploadComplete = true
-                                            customAvatarUrl = targetUrl
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(
@@ -481,141 +498,16 @@ fun ProfileSetupScreen(
                 }
             }
 
-            // Division selection dropdown label + Locate GPS Button
-            var isLocating by remember { mutableStateOf(false) }
-
-            Row(
+            // Division selection label (no GPS locator)
+            Text(
+                text = "যশোরের উপজেলা নির্বাচন করুন:",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "যশোরের উপজেলা নির্বাচন করুন:",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.weight(1f)
-                )
-
-                // Premium dynamic Locate Button
-                androidx.compose.material3.ElevatedButton(
-                    onClick = {
-                        if (!hasPermission) {
-                            permissionLauncher.launch(
-                                arrayOf(
-                                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                    android.Manifest.permission.ACCESS_COARSE_LOCATION
-                                )
-                            )
-                        } else {
-                            isLocating = true
-                            scope.launch {
-                                try {
-                                    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                                    val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-                                    val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-
-                                    var location: Location? = null
-                                    if (isGpsEnabled) {
-                                        location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                                    }
-                                    if (location == null && isNetworkEnabled) {
-                                        location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-                                    }
-
-                                    if (location != null) {
-                                        val lat = location.latitude
-                                        val lng = location.longitude
-                                        
-                                        val nearestUpazila = when {
-                                            lat > 23.25 -> "Chougachha"
-                                            lat > 23.20 -> "Bagherpara"
-                                            lat < 23.10 -> "Keshabpur"
-                                            lng > 89.30 -> "Abhaynagar"
-                                            lng < 89.10 -> "Sharsha"
-                                            else -> "Sadar"
-                                        }
-                                        selectedDivision = nearestUpazila
-                                        area = "জিপিএস অটো ডিটেক্টেড (${String.format("%.4f", lat)}, ${String.format("%.4f", lng)})"
-                                    } else {
-                                        kotlinx.coroutines.delay(1000)
-                                        val upazilaKeys = listOf("Sadar", "Jhikargachha", "Abhaynagar", "Manirampur", "Chougachha", "Sharsha")
-                                        selectedDivision = upazilaKeys.random()
-                                        area = "যশোর সদর (জিপিএস অটো ডিটেক্টেড আনুমানিক)"
-                                    }
-                                } catch (e: Exception) {
-                                    val upazilaKeys = listOf("Sadar", "Jhikargachha", "Abhaynagar", "Manirampur", "Chougachha", "Sharsha")
-                                    selectedDivision = upazilaKeys.random()
-                                    area = "যশোর সদর (জিপিএস অটো ডিটেক্টেড)"
-                                } finally {
-                                    isLocating = false
-                                }
-                            }
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isLocating) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = if (isLocating) Color.White else MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.testTag("gps_locate_button")
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        if (isLocating) {
-                            androidx.compose.material3.CircularProgressIndicator(
-                                modifier = Modifier.size(12.dp),
-                                strokeWidth = 1.6.dp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        } else {
-                            Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(14.dp))
-                        }
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = if (isLocating) "পিনপয়েন্ট..." else "লোকেশন চালু করুন",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            androidx.compose.animation.AnimatedVisibility(
-                visible = area.contains("জিপিএস অটো ডিটেক্টেড"),
-                enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.expandVertically(),
-                exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.shrinkVertically()
-            ) {
-                val bngUpazila = divisions.firstOrNull { it.first == selectedDivision }?.second ?: ""
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = Color(0xFF2E7D32),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "জিপিএস অবস্থান লকড! উপজেলা: $bngUpazila এবং নির্দিষ্ট স্থান সেট করা হয়েছে।",
-                            color = Color(0xFF2E7D32),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
+                    .padding(bottom = 12.dp)
+            )
 
             FlowRow(
                 modifier = Modifier
