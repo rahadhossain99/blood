@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -133,6 +135,8 @@ fun WelcomeScreen(
                     )
                 )
             )
+            .statusBarsPadding()
+            .navigationBarsPadding()
             .verticalScroll(scrollState)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -431,10 +435,9 @@ fun WelcomeScreen(
                             }
 
                             AuthStep.OTP_VERIFICATION -> {
-                                // Real-time Gmail inbox delivery status
                                 Card(
                                     colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFFE8F5E9) // Beautiful real-time green success tone
+                                        containerColor = Color(0xFFE8F5E9)
                                     ),
                                     shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier
@@ -454,7 +457,7 @@ fun WelcomeScreen(
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                text = "সরাসরি আপনার জিমেইলে কোড পাঠানো হয়েছে!",
+                                                text = "আপনার ইমেইলে কোড পাঠানো হয়েছে!",
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.ExtraBold,
                                                 color = Color(0xFF2E7D32)
@@ -462,41 +465,24 @@ fun WelcomeScreen(
                                         }
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = "রক্তবন্ধু রিয়েল-টাইম সিস্টেম সরাসরি $authEmail ঠিকানায় ৬ সংখ্যার অথেনটিকেশন কোডটি পাঠিয়েছে। অনুগ্রহ করে আপনার Gmail Inbox বা Spam ফোল্ডার চেক করুন।",
-                                            fontSize = 10.5.sp,
-                                            lineHeight = 14.sp,
+                                            text = "রক্তবন্ধু সিস্টেম সরাসরি $authEmail ঠিকানায় ৬ সংখ্যার অথেনটিকেশন কোডটি পাঠিয়েছে। অনুগ্রহ করে আপনার ইনবক্স বা স্প্যাম ফোল্ডার চেক করুন।",
+                                            fontSize = 11.sp,
+                                            lineHeight = 15.sp,
                                             color = Color.Black.copy(alpha = 0.7f)
                                         )
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            horizontalArrangement = Arrangement.Center,
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
                                             Text(
-                                                text = "কোড ব্যাকআপ:  $generatedOtp",
-                                                fontSize = 13.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color(0xFF1B5E20)
+                                                text = "ভেরিফিকেশন কোড: $generatedOtp",
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = Color(0xFF1B5E20),
+                                                textAlign = TextAlign.Center
                                             )
-                                            
-                                            // Auto-fill trigger button for convenience
-                                            Card(
-                                                colors = CardDefaults.cardColors(
-                                                    containerColor = Color(0xFFA5D6A7)
-                                                ),
-                                                shape = RoundedCornerShape(8.dp),
-                                                modifier = Modifier
-                                                    .clickable { triggerMagicAutoFill() }
-                                            ) {
-                                                Text(
-                                                    text = "অটো-ফিল করুন",
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = Color(0xFF1B5E20),
-                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                                )
-                                            }
                                         }
                                     }
                                 }
@@ -646,7 +632,7 @@ fun WelcomeScreen(
                                         .testTag("complete_register_button")
                                 ) {
                                     Text(
-                                        text = "নিবন্ধন সম্পন্ন করুন (Firestore)",
+                                        text = "নিবন্ধন সম্পন্ন করুন",
                                         fontSize = 15.sp,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -708,7 +694,7 @@ fun WelcomeScreen(
                                         .testTag("complete_login_button")
                                 ) {
                                     Text(
-                                        text = "লগইন করুন (Firestore)",
+                                        text = "লগইন করুন",
                                         fontSize = 15.sp,
                                         fontWeight = FontWeight.Bold
                                     )

@@ -189,6 +189,15 @@ fun DonorSearchScreen(
                 selectedUpazila = activeDivisionFilter,
                 onUpazilaSelected = { viewModel.setDivisionFilter(it) }
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Map displaying current search filter visualization
+            EmbeddedLocationMap(
+                selectedUpazila = activeDivisionFilter,
+                areaName = if (activeDivisionFilter == "সব" || activeDivisionFilter.isEmpty()) "সমগ্র যশোর জেলা" else "যশোর জেলা • " + (JashoreUpazilas.firstOrNull { it.first == activeDivisionFilter }?.second ?: activeDivisionFilter),
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
         }
 
         item {

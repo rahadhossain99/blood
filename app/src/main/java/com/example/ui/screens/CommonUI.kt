@@ -46,6 +46,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.filled.Info
 import coil.compose.AsyncImage
 
 // List of vibrant gradients for Avatars
@@ -437,6 +443,256 @@ fun SimulatedMobileStatusBar(
                 tint = Color(0xFF4CAF50), // Healthy Green
                 modifier = Modifier.size(15.dp)
             )
+        }
+    }
+}
+
+@Composable
+fun EmbeddedLocationMap(
+    selectedUpazila: String,
+    areaName: String,
+    modifier: Modifier = Modifier,
+    onLocationChanged: ((Double, Double, String) -> Unit)? = null
+) {
+    var lat by remember { mutableStateOf(23.1667) } // Default Jashore Latitude
+    var lng by remember { mutableStateOf(89.2133) } // Default Jashore Longitude
+    var zoomLevel by remember { mutableStateOf(14) }
+    var selectedLayer by remember { mutableStateOf("default") } // "default", "satellite", "terrain"
+
+    // Sync up coordinates according to different Upazilas of Jashore
+    LaunchedEffect(selectedUpazila) {
+        when (selectedUpazila) {
+            "Sadar" -> { lat = 23.1685; lng = 89.2124 }
+            "Jhikargachha" -> { lat = 23.1032; lng = 89.0224 }
+            "Abhaynagar" -> { lat = 23.0185; lng = 89.4412 }
+            "Manirampur" -> { lat = 23.0132; lng = 89.2274 }
+            "Chougachha" -> { lat = 23.2642; lng = 89.0252 }
+            "Sharsha" -> { lat = 23.0242; lng = 88.9221 }
+            "Keshabpur" -> { lat = 22.9062; lng = 89.2201 }
+            "Bagherpara" -> { lat = 23.2185; lng = 89.3490 }
+            else -> { lat = 23.1667; lng = 89.2133 }
+        }
+    }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(16.dp)),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Live map rendering on Compose Canvas
+            androidx.compose.foundation.Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable {
+                        // Simulates clicking and pinning on map dragging
+                        lat += (Math.random() - 0.5) * 0.005
+                        lng += (Math.random() - 0.5) * 0.005
+                        onLocationChanged?.invoke(lat, lng, selectedUpazila)
+                    }
+            ) {
+                val canvasWidth = size.width
+                val canvasHeight = size.height
+
+                // Draw map styled layers
+                when (selectedLayer) {
+                    "satellite" -> {
+                        // Draw deep earth satellite green-blue theme background
+                        drawRect(color = Color(0xFF1E3A1C))
+                        // Draw fields / organic textures
+                        drawCircle(color = Color(0xFF1B4D22), radius = canvasWidth / 3, center = androidx.compose.ui.geometry.Offset(canvasWidth * 0.2f, canvasHeight * 0.4f))
+                        drawCircle(color = Color(0xFF0F2C11), radius = canvasWidth / 4, center = androidx.compose.ui.geometry.Offset(canvasWidth * 0.8f, canvasHeight * 0.7f))
+                    }
+                    "terrain" -> {
+                        // Draw terrain brown-topographical lines
+                        drawRect(color = Color(0xFFF4EBE1))
+                        // Topography concentric circles
+                        drawCircle(
+                            color = Color(0xFFE3D4C1),
+                            radius = canvasWidth / 2.5f,
+                            center = androidx.compose.ui.geometry.Offset(canvasWidth * 0.5f, canvasHeight * 0.5f),
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx())
+                        )
+                        drawCircle(
+                            color = Color(0xFFE3D4C1),
+                            radius = canvasWidth / 4f,
+                            center = androidx.compose.ui.geometry.Offset(canvasWidth * 0.5f, canvasHeight * 0.5f),
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx())
+                        )
+                    }
+                    else -> {
+                        // Default Clean Cartography Grid background
+                        drawRect(color = Color(0xFFF1F5F9))
+                    }
+                }
+
+                // Draw road network (gray paths)
+                val roadColor = when (selectedLayer) {
+                    "satellite" -> Color(0x66FFFFFF)
+                    "terrain" -> Color(0x8894A3B8)
+                    else -> Color(0xFFCBD5E1)
+                }
+                
+                // Draw Highway
+                drawLine(
+                    color = if (selectedLayer == "satellite") Color(0xFFD97706) else Color(0xFFFFB03A),
+                    start = androidx.compose.ui.geometry.Offset(0f, canvasHeight * 0.4f),
+                    end = androidx.compose.ui.geometry.Offset(canvasWidth, canvasHeight * 0.6f),
+                    strokeWidth = 4.dp.toPx()
+                )
+                
+                // Secondary Roads
+                drawLine(color = roadColor, start = androidx.compose.ui.geometry.Offset(canvasWidth * 0.3f, 0f), end = androidx.compose.ui.geometry.Offset(canvasWidth * 0.3f, canvasHeight), strokeWidth = 2.dp.toPx())
+                drawLine(color = roadColor, start = androidx.compose.ui.geometry.Offset(canvasWidth * 0.7f, 0f), end = androidx.compose.ui.geometry.Offset(canvasWidth * 0.7f, canvasHeight), strokeWidth = 2.dp.toPx())
+                drawLine(color = roadColor, start = androidx.compose.ui.geometry.Offset(0f, canvasHeight * 0.8f), end = androidx.compose.ui.geometry.Offset(canvasWidth, canvasHeight * 0.1f), strokeWidth = 2.dp.toPx())
+
+                // Draw River (Bhairab River Jashore accent)
+                val riverPath = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(0f, canvasHeight * 0.2f)
+                    quadraticTo(canvasWidth * 0.4f, canvasHeight * 0.1f, canvasWidth * 0.6f, canvasHeight * 0.8f)
+                    lineTo(canvasWidth, canvasHeight * 0.9f)
+                }
+                drawPath(
+                    path = riverPath,
+                    color = Color(0xFF38BDF8),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = 6.dp.toPx(),
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round
+                    )
+                )
+
+                // Draw pulsing location radar circles around center pin
+                drawCircle(
+                    color = Color(0x33DC2626), 
+                    radius = 30.dp.toPx() + (zoomLevel * 0.5f), 
+                    center = androidx.compose.ui.geometry.Offset(canvasWidth / 2 , canvasHeight / 2)
+                )
+                
+                // Center Map Pin Dot
+                drawCircle(color = Color(0xFFDC2626), radius = 6.dp.toPx(), center = androidx.compose.ui.geometry.Offset(canvasWidth / 2, canvasHeight / 2))
+                drawCircle(color = Color.White, radius = 2.5.dp.toPx(), center = androidx.compose.ui.geometry.Offset(canvasWidth / 2, canvasHeight / 2))
+            }
+
+            // Top-left coordinates badge
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.Black.copy(alpha = 0.75f))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "ল্যাট: ${String.format("%.4f", lat)} • লং: ${String.format("%.4f", lng)}",
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            // Bottom-right Scale display
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(12.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color.White.copy(alpha = 0.85f))
+                    .padding(horizontal = 4.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    text = "${5000 / zoomLevel} মি.",
+                    color = Color.Black,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            // Top-right controls for Layers and Zoom
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Layer Switch Button
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                        .clickable {
+                            selectedLayer = when (selectedLayer) {
+                                "default" -> "satellite"
+                                "satellite" -> "terrain"
+                                else -> "default"
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "মানচিত্র নির্বাচন",
+                        tint = Color.Black,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+
+                // Zoom In
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                        .clickable { if (zoomLevel < 18) zoomLevel++ },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("+", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
+                }
+
+                // Zoom Out
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                        .clickable { if (zoomLevel > 8) zoomLevel-- },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("-", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+                }
+            }
+
+            // Bottom-left active status bar showing location verification
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.White.copy(alpha = 0.9f))
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = null,
+                    tint = Color(0xFFDC2626),
+                    modifier = Modifier.size(10.dp)
+                )
+                Spacer(modifier = Modifier.width(3.dp))
+                Text(
+                    text = if (areaName.isNotEmpty()) areaName else "যশোর",
+                    fontSize = 9.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = 110.dp)
+                )
+            }
         }
     }
 }
