@@ -639,23 +639,7 @@ fun ProfileSetupScreen(
                 }
             }
 
-            // Display interactive maps for choosing physical locations in Jashore Upazilas
-            JashoreUpazilaMap(
-                selectedUpazila = selectedDivision,
-                onUpazilaSelected = { selectedDivision = it },
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-
-            // High fidelity interactive live maps view representation
-            EmbeddedLocationMap(
-                selectedUpazila = selectedDivision,
-                areaName = area,
-                onLocationChanged = { pickedLat, pickedLng, pickedUpazila ->
-                    selectedDivision = pickedUpazila
-                    area = "জিপিএস লকড (${String.format("%.4f", pickedLat)}, ${String.format("%.4f", pickedLng)})"
-                },
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Specific Area input Field
             OutlinedTextField(

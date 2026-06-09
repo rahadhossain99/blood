@@ -98,6 +98,7 @@ fun WelcomeScreen(
     var otpInput by remember { mutableStateOf("") }
     var nameInput by remember { mutableStateOf("") }
     var passwordInput by remember { mutableStateOf("") }
+    var activeAuthTab by remember { androidx.compose.runtime.mutableIntStateOf(0) } // 0 = login, 1 = register
 
     // Sync input fields when auth flow resets
     LaunchedEffect(authStep) {
@@ -228,17 +229,84 @@ fun WelcomeScreen(
                     // Header Status Info based on Auth Step
                     when (authStep) {
                         AuthStep.EMAIL_INPUT -> {
+                            // Sliding visual tabs selection
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                                    .padding(4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                // Login Tab Button
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(if (activeAuthTab == 0) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                        .clickable { 
+                                            activeAuthTab = 0 
+                                            viewModel.setAuthError(null)
+                                        }
+                                        .padding(vertical = 12.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Lock,
+                                            contentDescription = null,
+                                            tint = if (activeAuthTab == 0) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "লগইন করুন",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (activeAuthTab == 0) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+
+                                // Register Tab Button
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(if (activeAuthTab == 1) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                        .clickable { 
+                                            activeAuthTab = 1 
+                                            viewModel.setAuthError(null)
+                                        }
+                                        .padding(vertical = 12.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = null,
+                                            tint = if (activeAuthTab == 1) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "রেজিস্ট্রেশন",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (activeAuthTab == 1) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(14.dp))
+
                             Text(
-                                text = "প্রবেশ করুন অথবা নিবন্ধন করুন",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = "ক্রিয়াশীল ডাটাবেজ সেশনের জন্য জিমেইল ব্যবহার করুন",
-                                fontSize = 11.sp,
+                                text = if (activeAuthTab == 0) "আপনার নিবন্ধিত জিমেইল আইডি দিয়ে সরাসরি প্রবেশ করুন" else "নতুন দাতা হিসেবে যুক্ত হতে অ্যাকাউন্ট তৈরি করুন",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                modifier = Modifier.padding(top = 2.dp, bottom = 16.dp),
+                                modifier = Modifier.padding(bottom = 16.dp),
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -406,7 +474,15 @@ fun WelcomeScreen(
                                             viewModel.setAuthError("অনুগ্রহ করে একটি সঠিক জিমেইল এড্রেস লিখুন।")
                                         } else {
                                             viewModel.checkAndSendVerificationCode(trimmed) { exists ->
-                                                viewModel.setAuthStep(AuthStep.OTP_VERIFICATION)
+                                                if (activeAuthTab == 0 && !exists) {
+                                                    viewModel.setAuthError("এই জিমেইল আইডিটি দিয়ে কোনো রক্তবন্ধু অ্যাকাউন্ট খোঁজে পাওয়া যায়নি। দয়া করে রেজিস্ট্রেশন ট্যাব সিলেক্ট করে নতুন অ্যাকাউন্ট খুলুন।")
+                                                    viewModel.resetAuthFlow()
+                                                } else if (activeAuthTab == 1 && exists) {
+                                                    viewModel.setAuthError("এই জিমেইল আইডি দিয়ে ইতিমধ্যেই একটি অ্যাকাউন্ট খোলা রয়েছে। দয়া করে লগইন ট্যাবটি সিলেক্ট করে সরাসরি প্রবেশ করুন।")
+                                                    viewModel.resetAuthFlow()
+                                                } else {
+                                                    viewModel.setAuthStep(AuthStep.OTP_VERIFICATION)
+                                                }
                                             }
                                         }
                                     },
