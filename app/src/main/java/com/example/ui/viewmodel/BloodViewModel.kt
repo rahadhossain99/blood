@@ -255,7 +255,7 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
             // Send real email directly to Gmail via Google Apps Script App
             val isEmailSent = EmailSender.sendOtp(email, randomOtp)
             if (!isEmailSent) {
-                _authErrorMsg.value = "সার্ভার থেকে সরাসরি জিমেইল কোড পাঠাতে দীর্ঘ সময় লাগছে। অনুগ্রহ করে আপনার জিমেইল স্প্যাম (Spam) ফোল্ডারটি চেক করুন অথবা নিচে দেওয়া ব্যাকআপ কোড ব্যবহার করুন।"
+                _authErrorMsg.value = "সার্ভার থেকে সরাসরি কোড পাঠাতে দীর্ঘ সময় লাগছে। অনুগ্রহ করে আপনার ইমেইল ইনবক্স বা স্প্যাম (Spam) ফোল্ডারটি চেক করুন।"
             }
 
             var exists = false

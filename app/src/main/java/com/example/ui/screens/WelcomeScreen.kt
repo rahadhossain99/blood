@@ -470,20 +470,6 @@ fun WelcomeScreen(
                                             lineHeight = 15.sp,
                                             color = Color.Black.copy(alpha = 0.7f)
                                         )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center,
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Text(
-                                                text = "ভেরিফিকেশন কোড: $generatedOtp",
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.ExtraBold,
-                                                color = Color(0xFF1B5E20),
-                                                textAlign = TextAlign.Center
-                                            )
-                                        }
                                     }
                                 }
 
