@@ -59,8 +59,6 @@ fun MyProfileTab(
     onEditClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val showGooglePicker by viewModel.showGooglePicker.collectAsState()
-
     val banglaDivision = when (userProfile.division) {
         "Sadar" -> "যশোর সদর"
         "Jhikargachha" -> "ঝিকরগাছা"

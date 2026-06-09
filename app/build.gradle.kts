@@ -124,6 +124,7 @@ dependencies {
   implementation("androidx.credentials:credentials-play-services-auth:1.2.2")
   implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
   implementation("com.google.firebase:firebase-auth:23.1.0")
+  implementation("com.google.firebase:firebase-firestore")
 
   "ksp"(libs.androidx.room.compiler)
   "ksp"(libs.moshi.kotlin.codegen)
