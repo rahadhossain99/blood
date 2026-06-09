@@ -70,15 +70,15 @@ fun DonorSearchScreen(
 
     val bloodGroups = listOf("সব", "O+", "A+", "B+", "AB+", "O-", "A-", "B-", "AB-")
     val divisions = listOf(
-        "সব" to "সব বিভাগ",
-        "Dhaka" to "ঢাকা",
-        "Chittagong" to "চট্টগ্রাম",
-        "Sylhet" to "সিলেট",
-        "Rajshahi" to "রাজশাহী",
-        "Khulna" to "খুলনা",
-        "Barishal" to "বরিশাল",
-        "Rangpur" to "রংপুর",
-        "Mymensingh" to "ময়মনসিংহ"
+        "সব" to "সব উপজেলা",
+        "Sadar" to "যশোর সদর",
+        "Jhikargachha" to "ঝিকরগাছা",
+        "Abhaynagar" to "অভয়নগর",
+        "Manirampur" to "মণিরামপুর",
+        "Chougachha" to "চৌগাছা",
+        "Bagherpara" to "বাঘারপাড়া",
+        "Keshabpur" to "কেশবপুর",
+        "Sharsha" to "শার্শা"
     )
 
     Column(
@@ -138,7 +138,7 @@ fun DonorSearchScreen(
 
         // Division flow shelf
         Text(
-            text = "বিভাগ ফিল্টার:",
+            text = "উপজেলা ফিল্টার:",
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
@@ -164,6 +164,13 @@ fun DonorSearchScreen(
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        JashoreUpazilaMap(
+            selectedUpazila = activeDivisionFilter,
+            onUpazilaSelected = { viewModel.setDivisionFilter(it) }
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -252,14 +259,14 @@ fun DonorRow(
 ) {
     val isReady = donor.isAvailable
     val banglaDivision = when (donor.division) {
-        "Dhaka" -> "ঢাকা"
-        "Chittagong" -> "চট্টগ্রাম"
-        "Sylhet" -> "সিলেট"
-        "Rajshahi" -> "রাজশাহী"
-        "Khulna" -> "খুলনা"
-        "Barishal" -> "বরিশাল"
-        "Rangpur" -> "রংপুর"
-        "Mymensingh" -> "ময়মনসিংহ"
+        "Sadar" -> "যশোর সদর"
+        "Jhikargachha" -> "ঝিকরগাছা"
+        "Abhaynagar" -> "অভয়নগর"
+        "Manirampur" -> "মণিরামপুর"
+        "Chougachha" -> "চৌগাছা"
+        "Bagherpara" -> "বাঘারপাড়া"
+        "Keshabpur" -> "কেশবপুর"
+        "Sharsha" -> "শার্শা"
         else -> donor.division
     }
 
@@ -285,7 +292,8 @@ fun DonorRow(
                     avatarId = donor.avatarId,
                     size = 56.dp,
                     borderWidth = 1.5.dp,
-                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    customAvatarUrl = donor.customAvatarUrl
                 )
                 // Small Availability Dot
                 Box(

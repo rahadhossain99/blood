@@ -109,14 +109,14 @@ fun RequestsScreen(
 
     val bloodGroups = listOf("O+", "A+", "B+", "AB+", "O-", "A-", "B-", "AB-")
     val divisions = listOf(
-        "Dhaka" to "ঢাকা",
-        "Chittagong" to "চট্টগ্রাম",
-        "Sylhet" to "সিলেট",
-        "Rajshahi" to "রাজশাহী",
-        "Khulna" to "খুলনা",
-        "Barishal" to "বরিশাল",
-        "Rangpur" to "রংপুর",
-        "Mymensingh" to "ময়মনসিংহ"
+        "Sadar" to "যশোর সদর",
+        "Jhikargachha" to "ঝিকরগাছা",
+        "Abhaynagar" to "অভয়নগর",
+        "Manirampur" to "মণিরামপুর",
+        "Chougachha" to "চৌগাছা",
+        "Bagherpara" to "বাঘারপাড়া",
+        "Keshabpur" to "কেশবপুর",
+        "Sharsha" to "শার্শা"
     )
 
     Scaffold(
@@ -359,7 +359,7 @@ fun RequestsScreen(
 
                         // Division selector
                         Text(
-                            text = "বিভাগ নির্বাচন করুন:",
+                            text = "যশোরের উপজেলা নির্বাচন করুন:",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
@@ -590,14 +590,14 @@ fun RequestCard(
     val showDelete = currentUserName.isNotEmpty() && request.requestedBy.equals(currentUserName, ignoreCase = true)
 
     val banglaDivision = when (request.division) {
-        "Dhaka" -> "ঢাকা"
-        "Chittagong" -> "চট্টগ্রাম"
-        "Sylhet" -> "সিলেট"
-        "Rajshahi" -> "রাজশাহী"
-        "Khulna" -> "খুলনা"
-        "Barishal" -> "বরিশাল"
-        "Rangpur" -> "রংপুর"
-        "Mymensingh" -> "ময়মনসিংহ"
+        "Sadar" -> "যশোর সদর"
+        "Jhikargachha" -> "ঝিকরগাছা"
+        "Abhaynagar" -> "অভয়নগর"
+        "Manirampur" -> "মণিরামপুর"
+        "Chougachha" -> "চৌগাছা"
+        "Bagherpara" -> "বাঘারপাড়া"
+        "Keshabpur" -> "কেশবপুর"
+        "Sharsha" -> "শার্শা"
         else -> request.division
     }
 

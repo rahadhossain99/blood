@@ -9,14 +9,15 @@ data class Donor(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
     val bloodGroup: String, // A+, A-, B+, B-, AB+, AB-, O+, O-
-    val division: String,   // Barishal, Chattogram, Dhaka, Khulna, Rajshahi, Rangpur, Mymensingh, Sylhet
+    val division: String,   // Barishal, Chattogram, Dhaka, Khulna, Rajshahi, Rangpur, Mymensingh, Sylhet or Jashore Upazila
     val area: String,       // Specific street/sub-category (e.g., Mirpur, Dhanmondi, Zindabazar)
     val phone: String,
     val email: String = "", // Links to simulated Google account
     val avatarId: Int = 1,  // ID representing avatar illustrations
     val isAvailable: Boolean = true,
     val lastDonationDate: String = "কখনো নয়", // Last donation info
-    val isCurrentUser: Boolean = false
+    val isCurrentUser: Boolean = false,
+    val customAvatarUrl: String = "" // Custom uploaded profile image url support
 ) : Serializable
 
 @Entity(tableName = "blood_requests")

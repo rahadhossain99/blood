@@ -57,7 +57,7 @@ interface BloodRequestDao {
     suspend fun deleteRequest(request: BloodRequest)
 }
 
-@Database(entities = [Donor::class, BloodRequest::class], version = 1, exportSchema = false)
+@Database(entities = [Donor::class, BloodRequest::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun donorDao(): DonorDao
     abstract fun bloodRequestDao(): BloodRequestDao

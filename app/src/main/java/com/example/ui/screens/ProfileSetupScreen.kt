@@ -79,19 +79,20 @@ fun ProfileSetupScreen(
     var isAvailable by remember { mutableStateOf(profile.isAvailable) }
     var avatarId by remember { mutableStateOf(profile.avatarId) }
     var lastDonationDate by remember { mutableStateOf(profile.lastDonationDate) }
+    var customAvatarUrl by remember { mutableStateOf(profile.customAvatarUrl) }
 
     var errorMessage by remember { mutableStateOf("") }
 
     val bloodGroups = listOf("O+", "A+", "B+", "AB+", "O-", "A-", "B-", "AB-")
     val divisions = listOf(
-        "Dhaka" to "ঢাকা",
-        "Chittagong" to "চট্টগ্রাম",
-        "Sylhet" to "সিলেট",
-        "Rajshahi" to "রাজশাহী",
-        "Khulna" to "খুলনা",
-        "Barishal" to "বরিশাল",
-        "Rangpur" to "রংপুর",
-        "Mymensingh" to "ময়মনসিংহ"
+        "Sadar" to "যশোর সদর",
+        "Jhikargachha" to "ঝিকরগাছা",
+        "Abhaynagar" to "অভয়নগর",
+        "Manirampur" to "মণিরামপুর",
+        "Chougachha" to "চৌগাছা",
+        "Bagherpara" to "বাঘারপাড়া",
+        "Keshabpur" to "কেশবপুর",
+        "Sharsha" to "শার্শা"
     )
 
     val donationPeriods = listOf(
@@ -129,7 +130,7 @@ fun ProfileSetupScreen(
 
             // Select avatar text
             Text(
-                text = "আপনার পছন্দের প্রোফাইল ছবি সিলেক্ট করুন:",
+                text = "আপনার পছন্দের রক্তের সেবা ব্যাজ সিলেক্ট করুন:",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -138,14 +139,14 @@ fun ProfileSetupScreen(
                     .padding(bottom = 8.dp)
             )
 
-            // Avatar selection carousel
+            // Avatar selection carousel (Removed cartoon assets to use beautiful caring badges)
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 24.dp),
+                    .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items((1..10).toList()) { id ->
+                items((1..5).toList()) { id ->
                     val isSelected = avatarId == id
                     Box(
                         contentAlignment = Alignment.Center,
@@ -157,7 +158,8 @@ fun ProfileSetupScreen(
                             avatarId = id,
                             size = 64.dp,
                             borderWidth = if (isSelected) 4.dp else 1.dp,
-                            borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray
+                            borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray,
+                            customAvatarUrl = customAvatarUrl
                         )
                         if (isSelected) {
                             Box(
@@ -179,6 +181,24 @@ fun ProfileSetupScreen(
                     }
                 }
             }
+
+            // Paste Custom image url text field
+            OutlinedTextField(
+                value = customAvatarUrl,
+                onValueChange = { customAvatarUrl = it },
+                label = { Text("অথবা নিজের ছবির সরাসরি লিংক দিন (যেমন: Imgur/FB URL)") },
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+                    .testTag("custom_avatar_url_input"),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary
+                )
+            )
 
             // Name textfield
             OutlinedTextField(
@@ -243,7 +263,7 @@ fun ProfileSetupScreen(
 
             // Division selection dropdown represent as flowrow
             Text(
-                text = "বিভাগ নির্বাচন করুন:",
+                text = "যশোরের উপজেলা নির্বাচন করুন:",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -255,7 +275,7 @@ fun ProfileSetupScreen(
             FlowRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -274,11 +294,18 @@ fun ProfileSetupScreen(
                 }
             }
 
+            // Display interactive maps for choosing physical locations in Jashore Upazilas
+            JashoreUpazilaMap(
+                selectedUpazila = selectedDivision,
+                onUpazilaSelected = { selectedDivision = it },
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
             // Specific Area input Field
             OutlinedTextField(
                 value = area,
                 onValueChange = { area = it },
-                label = { Text("সুনির্দিষ্ট স্থান (যেমন: মিরপুর-১০, ঢাকা)") },
+                label = { Text("সুনির্দিষ্ট স্থান (যেমন: পালবাড়ি মোড়, যশোর সদর)") },
                 leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
@@ -450,7 +477,8 @@ fun ProfileSetupScreen(
                         phone = phone.trim(),
                         avatarId = avatarId,
                         isAvailable = isAvailable,
-                        lastDonationDate = lastDonationDate
+                        lastDonationDate = lastDonationDate,
+                        customAvatarUrl = customAvatarUrl.trim()
                     )
                     onSaved()
                 },

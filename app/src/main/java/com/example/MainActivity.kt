@@ -69,7 +69,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                MainAppHost(viewModel = viewModel)
+                androidx.compose.foundation.layout.Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    com.example.ui.screens.SimulatedMobileStatusBar()
+                    Box(modifier = Modifier.weight(1f)) {
+                        MainAppHost(viewModel = viewModel)
+                    }
+                }
             }
         }
     }

@@ -62,14 +62,14 @@ fun MyProfileTab(
     val showGooglePicker by viewModel.showGooglePicker.collectAsState()
 
     val banglaDivision = when (userProfile.division) {
-        "Dhaka" -> "ঢাকা"
-        "Chittagong" -> "চট্টগ্রাম"
-        "Sylhet" -> "সিলেট"
-        "Rajshahi" -> "রাজশাহী"
-        "Khulna" -> "খুলনা"
-        "Barishal" -> "বরিশাল"
-        "Rangpur" -> "রংপুর"
-        "Mymensingh" -> "ময়মনসিংহ"
+        "Sadar" -> "যশোর সদর"
+        "Jhikargachha" -> "ঝিকরগাছা"
+        "Abhaynagar" -> "অভয়নগর"
+        "Manirampur" -> "মণিরামপুর"
+        "Chougachha" -> "চৌগাছা"
+        "Bagherpara" -> "বাঘারপাড়া"
+        "Keshabpur" -> "কেশবপুর"
+        "Sharsha" -> "শার্শা"
         else -> userProfile.division
     }
 
@@ -102,7 +102,8 @@ fun MyProfileTab(
                         avatarId = userProfile.avatarId,
                         size = 96.dp,
                         borderWidth = 3.dp,
-                        borderColor = MaterialTheme.colorScheme.primary
+                        borderColor = MaterialTheme.colorScheme.primary,
+                        customAvatarUrl = userProfile.customAvatarUrl
                     )
                     // Availability circular status dot
                     Box(
@@ -299,16 +300,17 @@ fun MyProfileTab(
                     Switch(
                         checked = userProfile.isAvailable,
                         onCheckedChange = { isReady ->
-                            viewModel.saveProfile(
-                                name = userProfile.name,
-                                bloodGroup = userProfile.bloodGroup,
-                                division = userProfile.division,
-                                area = userProfile.area,
-                                phone = userProfile.phone,
-                                avatarId = userProfile.avatarId,
-                                isAvailable = isReady,
-                                lastDonationDate = userProfile.lastDonationDate
-                            )
+                             viewModel.saveProfile(
+                                 name = userProfile.name,
+                                 bloodGroup = userProfile.bloodGroup,
+                                 division = userProfile.division,
+                                 area = userProfile.area,
+                                 phone = userProfile.phone,
+                                 avatarId = userProfile.avatarId,
+                                 isAvailable = isReady,
+                                 lastDonationDate = userProfile.lastDonationDate,
+                                 customAvatarUrl = userProfile.customAvatarUrl
+                             )
                         },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = MaterialTheme.colorScheme.primary,

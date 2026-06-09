@@ -29,7 +29,7 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
         application,
         AppDatabase::class.java,
         "blood_donation_db"
-    ).build()
+    ).fallbackToDestructiveMigration().build()
 
     private val repository = BloodRepository(db.donorDao(), db.bloodRequestDao())
 
@@ -141,7 +141,8 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
         phone: String,
         avatarId: Int,
         isAvailable: Boolean,
-        lastDonationDate: String
+        lastDonationDate: String,
+        customAvatarUrl: String = ""
     ) {
         viewModelScope.launch {
             val currentMail = _loggedInEmail.value ?: ""
@@ -155,7 +156,8 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                 avatarId = avatarId,
                 isAvailable = isAvailable,
                 lastDonationDate = lastDonationDate,
-                isCurrentUser = true
+                isCurrentUser = true,
+                customAvatarUrl = customAvatarUrl
             )
             repository.saveCurrentUser(updatedProfile)
         }
