@@ -1,0 +1,6 @@
+{
+  "name": "রক্তবন্ধু (RoktoBandhu)",
+  "description": "রক্তদান এবং রক্তদাতা খোঁজার জন্য একটি সুন্দর এবং সহজ রক্তবন্ধু অ্যাপ্লিকেশান।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
