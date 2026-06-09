@@ -435,10 +435,10 @@ fun WelcomeScreen(
                             }
 
                             AuthStep.OTP_VERIFICATION -> {
-                                // Real simulated Gmail inbox popup simulator
+                                // Real-time Gmail inbox delivery status
                                 Card(
                                     colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFFFFF9C4)
+                                        containerColor = Color(0xFFE8F5E9) // Beautiful real-time green success tone
                                     ),
                                     shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier
@@ -452,51 +452,52 @@ fun WelcomeScreen(
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.MarkEmailRead,
-                                                contentDescription = "Simulated notification",
-                                                tint = Color(0xFFF57F17),
+                                                contentDescription = "Email sent",
+                                                tint = Color(0xFF2E7D32),
                                                 modifier = Modifier.size(20.dp)
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                text = "জিমেইল ইনবক্স সিমুলেটর",
-                                                fontSize = 13.sp,
+                                                text = "সরাসরি আপনার জিমেইলে কোড পাঠানো হয়েছে!",
+                                                fontSize = 12.sp,
                                                 fontWeight = FontWeight.ExtraBold,
-                                                color = Color(0xFFF57F17)
+                                                color = Color(0xFF2E7D32)
                                             )
                                         }
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = "রক্তবন্ধু থেকে আপনার ইনবক্সে কোড পাঠানো হয়েছে।",
-                                            fontSize = 11.sp,
+                                            text = "রক্তবন্ধু রিয়েল-টাইম সিস্টেম সরাসরি $authEmail ঠিকানায় ৬ সংখ্যার অথেনটিকেশন কোডটি পাঠিয়েছে। অনুগ্রহ করে আপনার Gmail Inbox বা Spam ফোল্ডার চেক করুন।",
+                                            fontSize = 10.5.sp,
+                                            lineHeight = 14.sp,
                                             color = Color.Black.copy(alpha = 0.7f)
                                         )
-                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
                                             Text(
-                                                text = "ভেরিফিকেশন কোড:  $generatedOtp",
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Black,
-                                                color = Color(0xFFE65100)
+                                                text = "কোড ব্যাকআপ:  $generatedOtp",
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF1B5E20)
                                             )
                                             
-                                            // Auto-fill trigger button
+                                            // Auto-fill trigger button for convenience
                                             Card(
                                                 colors = CardDefaults.cardColors(
-                                                    containerColor = Color(0xFFFFCC80)
+                                                    containerColor = Color(0xFFA5D6A7)
                                                 ),
                                                 shape = RoundedCornerShape(8.dp),
                                                 modifier = Modifier
                                                     .clickable { triggerMagicAutoFill() }
                                             ) {
                                                 Text(
-                                                    text = "অটো-ফিল কোড",
+                                                    text = "অটো-ফিল করুন",
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = Color(0xFFE65100),
+                                                    color = Color(0xFF1B5E20),
                                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                                 )
                                             }
