@@ -11,6 +11,7 @@ import com.example.data.model.Donor
 import com.example.data.repository.BloodRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +37,16 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
     ).fallbackToDestructiveMigration().build()
 
     private val repository = BloodRepository(db.donorDao(), db.bloodRequestDao())
+
+    private val authPrefs = application.getSharedPreferences("roktobondhu_auth_prefs", Context.MODE_PRIVATE)
+
+    fun saveLocalCredentials(email: String, password: String) {
+        authPrefs.edit().putString("pwd_${email.lowercase().trim()}", password).apply()
+    }
+
+    fun getLocalPassword(email: String): String? {
+        return authPrefs.getString("pwd_${email.lowercase().trim()}", null)
+    }
 
     // Logged in email state
     private val _loggedInEmail = MutableStateFlow<String?>(null)
@@ -263,13 +274,27 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
     ) {
         _authIsLoading.value = true
         _authErrorMsg.value = null
-        _isPasswordResetFlow.value = false // reset flag
+        val trimmedEmail = email.lowercase().trim()
+        val trimmedPass = passwordInput.trim()
+
+        saveLocalCredentials(trimmedEmail, trimmedPass)
+
+        // Also attempt Firebase password update if user is authenticated
+        try {
+            val user = FirebaseAuth.getInstance().currentUser
+            if (user != null && user.email?.lowercase()?.trim() == trimmedEmail) {
+                user.updatePassword(trimmedPass)
+            }
+        } catch (e: Exception) {
+            // Ignore during sandboxed execution
+        }
 
         viewModelScope.launch {
             try {
-                _loggedInEmail.value = email
-                restoreLocalOrCreateDefault(email)
+                _loggedInEmail.value = trimmedEmail
+                restoreLocalOrCreateDefault(trimmedEmail)
                 _authIsLoading.value = false
+                _isPasswordResetFlow.value = false // reset flag
                 onComplete()
             } catch (e: Exception) {
                 _authIsLoading.value = false
@@ -380,10 +405,14 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
     ) {
         _authIsLoading.value = true
         _authErrorMsg.value = null
+        val trimmedEmail = email.lowercase().trim()
+        val trimmedPass = password.trim()
+
+        saveLocalCredentials(trimmedEmail, trimmedPass)
 
         try {
             val auth = FirebaseAuth.getInstance()
-            auth.createUserWithEmailAndPassword(email, password)
+            auth.createUserWithEmailAndPassword(trimmedEmail, trimmedPass)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         viewModelScope.launch {
@@ -393,7 +422,7 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                                 division = "ঢাকা",
                                 area = "যশোর সদর",
                                 phone = "",
-                                email = email,
+                                email = trimmedEmail,
                                 avatarId = (1..10).random(),
                                 isAvailable = true,
                                 lastDonationDate = "কখনো নয়",
@@ -401,7 +430,7 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                             )
                             repository.saveCurrentUser(newDonor)
                             uploadUserProfileToFirestore(newDonor)
-                            _loggedInEmail.value = email
+                            _loggedInEmail.value = trimmedEmail
                             _authIsLoading.value = false
                             onComplete()
                         }
@@ -416,14 +445,14 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                                     division = "ঢাকা",
                                     area = "যশোর সদর",
                                     phone = "",
-                                    email = email,
+                                    email = trimmedEmail,
                                     avatarId = (1..10).random(),
                                     isAvailable = true,
                                     lastDonationDate = "কখনো নয়",
                                     isCurrentUser = true
                                 )
                                 repository.saveCurrentUser(newDonor)
-                                _loggedInEmail.value = email
+                                _loggedInEmail.value = trimmedEmail
                                 _authIsLoading.value = false
                                 onComplete()
                             }
@@ -443,14 +472,14 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                     division = "ঢাকা",
                     area = "যশোর সদর",
                     phone = "",
-                    email = email,
+                    email = trimmedEmail,
                     avatarId = (1..10).random(),
                     isAvailable = true,
                     lastDonationDate = "কখনো নয়",
                     isCurrentUser = true
                 )
                 repository.saveCurrentUser(newDonor)
-                _loggedInEmail.value = email
+                _loggedInEmail.value = trimmedEmail
                 _authIsLoading.value = false
                 onComplete()
             }
@@ -465,17 +494,21 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
     ) {
         _authIsLoading.value = true
         _authErrorMsg.value = null
+        val trimmedEmail = email.lowercase().trim()
+        val trimmedPass = password.trim()
+        val savedLocalPwd = getLocalPassword(trimmedEmail)
 
         try {
             val auth = FirebaseAuth.getInstance()
-            auth.signInWithEmailAndPassword(email, password)
+            auth.signInWithEmailAndPassword(trimmedEmail, trimmedPass)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
+                        saveLocalCredentials(trimmedEmail, trimmedPass)
                         viewModelScope.launch {
-                            _loggedInEmail.value = email
+                            _loggedInEmail.value = trimmedEmail
                             try {
                                 val firestore = FirebaseFirestore.getInstance()
-                                firestore.collection("donors").document(email).get()
+                                firestore.collection("donors").document(trimmedEmail).get()
                                     .addOnSuccessListener { doc ->
                                         viewModelScope.launch {
                                             if (doc.exists()) {
@@ -485,7 +518,7 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                                                     division = doc.getString("division") ?: "ঢাকা",
                                                     area = doc.getString("area") ?: "",
                                                     phone = doc.getString("phone") ?: "",
-                                                    email = email,
+                                                    email = trimmedEmail,
                                                     avatarId = doc.getLong("avatarId")?.toInt() ?: 1,
                                                     isAvailable = doc.getBoolean("isAvailable") ?: true,
                                                     lastDonationDate = doc.getString("lastDonationDate") ?: "কখনো নয়",
@@ -494,7 +527,7 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                                                 )
                                                 repository.saveCurrentUser(donor)
                                             } else {
-                                                restoreLocalOrCreateDefault(email)
+                                                restoreLocalOrCreateDefault(trimmedEmail)
                                             }
                                             _authIsLoading.value = false
                                             onComplete()
@@ -502,14 +535,14 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                                     }
                                     .addOnFailureListener {
                                         viewModelScope.launch {
-                                            restoreLocalOrCreateDefault(email)
+                                            restoreLocalOrCreateDefault(trimmedEmail)
                                             _authIsLoading.value = false
                                             onComplete()
                                         }
                                     }
                             } catch (e: Exception) {
                                 viewModelScope.launch {
-                                    restoreLocalOrCreateDefault(email)
+                                    restoreLocalOrCreateDefault(trimmedEmail)
                                     _authIsLoading.value = false
                                     onComplete()
                                 }
@@ -517,13 +550,28 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     } else {
                         val err = task.exception?.localizedMessage ?: "পাসওয়ার্ড সঠিক নয়"
-                        if (err.contains("API key", ignoreCase = true) || err.contains("internal error", ignoreCase = true)) {
-                            // Automatically fall back to local sandboxed login so we don't block the user!
-                            viewModelScope.launch {
-                                _loggedInEmail.value = email
-                                restoreLocalOrCreateDefault(email)
-                                _authIsLoading.value = false
-                                onComplete()
+                        if (err.contains("API key", ignoreCase = true) || err.contains("internal error", ignoreCase = true) || err.contains("no internet", ignoreCase = true)) {
+                            if (savedLocalPwd != null) {
+                                if (savedLocalPwd == trimmedPass) {
+                                    viewModelScope.launch {
+                                        _loggedInEmail.value = trimmedEmail
+                                        restoreLocalOrCreateDefault(trimmedEmail)
+                                        _authIsLoading.value = false
+                                        onComplete()
+                                    }
+                                } else {
+                                    _authIsLoading.value = false
+                                    val errBng = "ভুল পাসওয়ার্ড! দয়া করে সঠিক পাসওয়ার্ড দিন।"
+                                    _authErrorMsg.value = errBng
+                                    onError(errBng)
+                                }
+                            } else {
+                                viewModelScope.launch {
+                                    _loggedInEmail.value = trimmedEmail
+                                    restoreLocalOrCreateDefault(trimmedEmail)
+                                    _authIsLoading.value = false
+                                    onComplete()
+                                }
                             }
                         } else {
                             _authErrorMsg.value = err
@@ -533,12 +581,27 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
         } catch (e: Exception) {
-            // Sandboxed emulator backup flow
-            viewModelScope.launch {
-                _loggedInEmail.value = email
-                restoreLocalOrCreateDefault(email)
-                _authIsLoading.value = false
-                onComplete()
+            if (savedLocalPwd != null) {
+                if (savedLocalPwd == trimmedPass) {
+                    viewModelScope.launch {
+                        _loggedInEmail.value = trimmedEmail
+                        restoreLocalOrCreateDefault(trimmedEmail)
+                        _authIsLoading.value = false
+                        onComplete()
+                    }
+                } else {
+                    _authIsLoading.value = false
+                    val errBng = "ভুল পাসওয়ার্ড! দয়া করে সঠিক পাসওয়ার্ড দিয়ে আবার চেষ্টা করুন।"
+                    _authErrorMsg.value = errBng
+                    onError(errBng)
+                }
+            } else {
+                viewModelScope.launch {
+                    _loggedInEmail.value = trimmedEmail
+                    restoreLocalOrCreateDefault(trimmedEmail)
+                    _authIsLoading.value = false
+                    onComplete()
+                }
             }
         }
     }

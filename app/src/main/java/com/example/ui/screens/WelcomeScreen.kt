@@ -68,6 +68,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -136,7 +137,45 @@ fun WelcomeScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFFF9F9)) // Beautiful bright warm blood-red/pinkish white background!
+            .drawBehind {
+                // 1. Warm organic blood-red premium gradient cover
+                val bgGradient = Brush.linearGradient(
+                    colors = listOf(Color(0xFFFFFAFA), Color(0xFFFFF0F2), Color(0xFFFFECEF))
+                )
+                drawRect(brush = bgGradient)
+
+                // 2. Faint professional medical/science grid lines
+                val spacingPx = 40.dp.toPx()
+                val lineCol = Color(0xFFFF1744).copy(alpha = 0.05f)
+                val lineStroke = 1.dp.toPx()
+
+                var xVal = 0f
+                while (xVal < size.width) {
+                    drawLine(
+                        color = lineCol,
+                        start = androidx.compose.ui.geometry.Offset(xVal, 0f),
+                        end = androidx.compose.ui.geometry.Offset(xVal, size.height),
+                        strokeWidth = lineStroke
+                    )
+                    xVal += spacingPx
+                }
+
+                var yVal = 0f
+                while (yVal < size.height) {
+                    drawLine(
+                        color = lineCol,
+                        start = androidx.compose.ui.geometry.Offset(0f, yVal),
+                        end = androidx.compose.ui.geometry.Offset(size.width, yVal),
+                        strokeWidth = lineStroke
+                    )
+                    yVal += spacingPx
+                }
+
+                // 3. Faint atmospheric organic blood rings
+                drawCircle(color = Color(0xFFFF1744).copy(alpha = 0.02f), radius = 150.dp.toPx(), center = androidx.compose.ui.geometry.Offset(size.width * 0.1f, size.height * 0.15f))
+                drawCircle(color = Color(0xFFFF1744).copy(alpha = 0.03f), radius = 220.dp.toPx(), center = androidx.compose.ui.geometry.Offset(size.width * 0.95f, size.height * 0.75f))
+                drawCircle(color = Color(0xFFFF1744).copy(alpha = 0.015f), radius = 90.dp.toPx(), center = androidx.compose.ui.geometry.Offset(size.width * 0.5f, size.height * 0.9f))
+            }
             .statusBarsPadding()
             .navigationBarsPadding()
             .verticalScroll(scrollState)
@@ -519,7 +558,6 @@ fun WelcomeScreen(
                                                 viewModel.checkAndSendVerificationCode(trimmed) { exists ->
                                                     if (!exists) {
                                                         viewModel.setAuthError("এই জিমেইল আইডিটি দিয়ে কোনো রক্তবন্ধু অ্যাকাউন্ট খোঁজে পাওয়া যায়নি।")
-                                                        viewModel.resetAuthFlow()
                                                     } else {
                                                         viewModel.setPasswordResetFlow(true)
                                                         viewModel.setAuthStep(AuthStep.OTP_VERIFICATION)
@@ -844,29 +882,31 @@ fun WelcomeScreen(
                             }
 
                             AuthStep.PASSWORD_SETUP -> {
-                                OutlinedTextField(
-                                    value = nameInput,
-                                    onValueChange = { 
-                                        nameInput = it
-                                        viewModel.setAuthError(null)
-                                    },
-                                    label = { Text("আপনার সম্পূর্ণ নাম লিখুন") },
-                                    placeholder = { Text("যেমন: রাহাদ হোসাইন") },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                    },
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(16.dp),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .testTag("register_name_field"),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                                if (!isPasswordResetFlow) {
+                                    OutlinedTextField(
+                                        value = nameInput,
+                                        onValueChange = { 
+                                            nameInput = it
+                                            viewModel.setAuthError(null)
+                                        },
+                                        label = { Text("আপনার সম্পূর্ণ নাম লিখুন") },
+                                        placeholder = { Text("যেমন: রাহাদ হোসাইন") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                        },
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(16.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .testTag("register_name_field"),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                                        )
                                     )
-                                )
 
-                                Spacer(modifier = Modifier.height(12.dp))
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                }
 
                                 OutlinedTextField(
                                     value = passwordInput,
@@ -874,7 +914,7 @@ fun WelcomeScreen(
                                         passwordInput = it
                                         viewModel.setAuthError(null)
                                     },
-                                    label = { Text("৬+ অক্ষরের একটি পাসওয়ার্ড দিন") },
+                                    label = { Text(if (isPasswordResetFlow) "৬+ অক্ষরের একটি নতুন পাসওয়ার্ড দিন" else "৬+ অক্ষরের একটি পাসওয়ার্ড দিন") },
                                     placeholder = { Text("পাসওয়ার্ড") },
                                     leadingIcon = {
                                         Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
@@ -898,22 +938,35 @@ fun WelcomeScreen(
                                     onClick = {
                                         val nameTrim = nameInput.trim()
                                         val passTrim = passwordInput.trim()
-                                        if (nameTrim.length < 3) {
+                                        if (!isPasswordResetFlow && nameTrim.length < 3) {
                                             viewModel.setAuthError("দয়া করে আপনার সঠিক সম্পূর্ণ নামটি লিখুন।")
                                         } else if (passTrim.length < 6) {
                                             viewModel.setAuthError("পাসওয়ার্ড কমপক্ষে ৬ সংখ্যার বা অক্ষরের হতে হবে।")
                                         } else {
-                                            viewModel.signUpWithEmailPassword(
-                                                email = authEmail,
-                                                name = nameTrim,
-                                                password = passTrim,
-                                                onComplete = {
-                                                    // Sign up complete! MainAppHost automatically transitions
-                                                },
-                                                onError = { err ->
-                                                    // Handled in viewmodel error stream
-                                                }
-                                            )
+                                            if (isPasswordResetFlow) {
+                                                viewModel.resetUserPassword(
+                                                    email = authEmail,
+                                                    passwordInput = passTrim,
+                                                    onComplete = {
+                                                        // Complete reset
+                                                    },
+                                                    onError = { err ->
+                                                        // Handled in VM error
+                                                    }
+                                                )
+                                            } else {
+                                                viewModel.signUpWithEmailPassword(
+                                                    email = authEmail,
+                                                    name = nameTrim,
+                                                    password = passTrim,
+                                                    onComplete = {
+                                                        // Sign up complete! MainAppHost automatically transitions
+                                                    },
+                                                    onError = { err ->
+                                                        // Handled in viewmodel error stream
+                                                    }
+                                                )
+                                            }
                                         }
                                     },
                                     shape = RoundedCornerShape(16.dp),
@@ -926,7 +979,7 @@ fun WelcomeScreen(
                                         .testTag("complete_register_button")
                                 ) {
                                     Text(
-                                        text = "নিবন্ধন সম্পন্ন করুন",
+                                        text = if (isPasswordResetFlow) "পাসওয়ার্ড সংশোধন করুন" else "নিবন্ধন সম্পন্ন করুন",
                                         fontSize = 15.sp,
                                         fontWeight = FontWeight.Bold
                                     )

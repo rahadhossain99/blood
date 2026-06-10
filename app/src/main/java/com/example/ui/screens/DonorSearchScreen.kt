@@ -3,6 +3,8 @@ package com.example.ui.screens
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -102,6 +104,40 @@ fun DonorSearchScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
+            .drawBehind {
+                // 1. Premium pristine organic blood-red premium background gradient
+                val bgGradient = Brush.linearGradient(
+                    colors = listOf(Color(0xFFFFFCFC), Color(0xFFFFF7F8), Color(0xFFFFF0F3))
+                )
+                drawRect(brush = bgGradient)
+
+                // 2. Faint professional medical/science grids
+                val spacingPx = 50.dp.toPx()
+                val lineCol = Color(0xFFFF1744).copy(alpha = 0.035f)
+                val lineStroke = 1.dp.toPx()
+
+                var xVal = 0f
+                while (xVal < size.width) {
+                    drawLine(
+                        color = lineCol,
+                        start = androidx.compose.ui.geometry.Offset(xVal, 0f),
+                        end = androidx.compose.ui.geometry.Offset(xVal, size.height),
+                        strokeWidth = lineStroke
+                    )
+                    xVal += spacingPx
+                }
+
+                var yVal = 0f
+                while (yVal < size.height) {
+                    drawLine(
+                        color = lineCol,
+                        start = androidx.compose.ui.geometry.Offset(0f, yVal),
+                        end = androidx.compose.ui.geometry.Offset(size.width, yVal),
+                        strokeWidth = lineStroke
+                    )
+                    yVal += spacingPx
+                }
+            }
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
