@@ -16,9 +16,37 @@ View your app in AI Studio: https://ai.studio/apps/99b52394-2d1a-4a5c-a408-14cad
 - Firebase account with a project
 - Gemini API key from [Google AI Studio](https://ai.google.dev/)
 
-## Setup Instructions
+## দ্রুত ইনস্টলেশন গাইড (Quick Installation)
 
-### 1. Clone and Open the Project
+### ১. প্রজেক্ট ক্লোন করুন
+```bash
+git clone https://github.com/rahadhossain99/blood.git
+cd blood
+```
+
+### ২. Android Studio তে খুলুন
+- Android Studio লঞ্চ করুন
+- **File** → **Open** → `blood` ফোল্ডার সিলেক্ট করুন
+- ডাউনলোড ও সিঙ্ক সম্পন্ন হওয়ার জন্য অপেক্ষা করুন
+
+### ৩. অ্যাপ চালান
+
+#### ডিবাগ মোড (দ্রুত টেস্টিং):
+```bash
+./gradlew installDebug
+# অথবা Android Studio তে: Run → Run 'app'
+```
+
+#### রিলিজ বিল্ড (প্রোডাকশনের জন্য):
+```bash
+./gradlew assembleRelease
+```
+
+## বিস্তারিত সেটআপ (Detailed Setup)
+
+### Setup Instructions
+
+#### 1. Clone and Open the Project
 
 ```bash
 git clone <repository-url>
@@ -29,7 +57,7 @@ cd blood
 - Select **File** → **Open** and choose this project directory
 - Allow Android Studio to sync and fix any incompatibilities
 
-### 2. Configure Environment Variables
+#### 2. Configure Environment Variables
 
 Create a `.env` file in the project root directory (copy from `.env.example`):
 
@@ -57,7 +85,7 @@ DEBUG_KEY_ALIAS=androiddebugkey
 DEBUG_KEY_PASSWORD=android
 ```
 
-### 3. Set Up Firebase
+#### 3. Set Up Firebase
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Create a new project or select existing one
@@ -65,20 +93,42 @@ DEBUG_KEY_PASSWORD=android
 4. Download `google-services.json` and place it in `app/` directory
 5. Enable Firestore Database and Authentication (Email/Password and Google Sign-In)
 
-### 4. Run the Application
+#### 4. Run the Application
 
-#### On Emulator:
+##### On Emulator:
 1. Open **AVD Manager** in Android Studio
 2. Create or select an emulator (API 24 or higher)
 3. Click the green **Run** button or press `Shift + F10`
 
-#### On Physical Device:
+##### On Physical Device:
 1. Enable Developer Mode and USB Debugging on your device
 2. Connect device via USB
 3. Click the green **Run** button
 4. Select your device from the list
 
-### 5. For Production Builds
+## বিল্ড আউটপুট (Build Outputs)
+
+বিল্ড সফল হলে APK ফাইলগুলি এখানে পাবেন:
+
+```
+app/build/outputs/
+├── apk/
+│   ├── debug/app-debug.apk          # ডিবাগ অ্যাপ
+│   └── release/app-release.apk      # রিলিজ অ্যাপ
+└── bundle/
+    └── release/app-release.aab      # Google Play এর জন্য
+```
+
+### ডিভাইসে ইনস্টল করুন:
+```bash
+# ডিবাগ APK:
+adb install app/build/outputs/apk/debug/app-debug.apk
+
+# রিলিজ APK:
+adb install app/build/outputs/apk/release/app-release.apk
+```
+
+#### 5. For Production Builds
 
 To create a release build:
 
@@ -151,7 +201,7 @@ blood/
 - Keep `google-services.json` secure
 - Rotate signing keys regularly
 
-## Troubleshooting
+## সমস্যা সমাধান (Troubleshooting)
 
 ### Build Errors
 
@@ -160,6 +210,21 @@ blood/
 
 **Problem:** Firebase dependency resolution issues
 - **Solution:** Ensure you're using the correct `google-services.json` file for your Firebase project
+
+**Problem:** Gradle সিঙ্ক ব্যর্থ হচ্ছে
+- **সমাধান:**
+```bash
+./gradlew clean
+./gradlew build
+```
+
+**Problem:** বিল্ড ক্যাশ সমস্যা
+- **সমাধান:**
+```bash
+./gradlew cleanBuildCache
+rm -rf .gradle
+./gradlew build
+```
 
 ### Runtime Issues
 
@@ -176,6 +241,16 @@ blood/
 3. Monitor Firestore usage in Firebase console
 4. Use Firebase Emulator Suite for local development
 5. Check ProGuard rules before release builds
+
+## টেস্ট চালান (Run Tests)
+
+```bash
+# ইউনিট টেস্ট:
+./gradlew test
+
+# অ্যান্ড্রয়েড ইন্সট্রুমেন্টেশন টেস্ট:
+./gradlew connectedAndroidTest
+```
 
 ## Contributing
 
