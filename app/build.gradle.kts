@@ -26,27 +26,28 @@ android {
       val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
       storeFile = file(keystorePath)
       storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
+      keyAlias = System.getenv("KEY_ALIAS") ?: "upload"
       keyPassword = System.getenv("KEY_PASSWORD")
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
+      storePassword = System.getenv("DEBUG_STORE_PASSWORD") ?: "android"
+      keyAlias = System.getenv("DEBUG_KEY_ALIAS") ?: "androiddebugkey"
+      keyPassword = System.getenv("DEBUG_KEY_PASSWORD") ?: "android"
     }
   }
 
   buildTypes {
     release {
       isCrunchPngs = false
-      isMinifyEnabled = false
+      isMinifyEnabled = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
+      isDebuggable = false
     }
     debug {
-      isDebuggable = false
-      isMinifyEnabled = true
+      isDebuggable = true
+      isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("debugConfig")
     }
@@ -123,7 +124,7 @@ dependencies {
   implementation("androidx.credentials:credentials:1.2.2")
   implementation("androidx.credentials:credentials-play-services-auth:1.2.2")
   implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
-  implementation("com.google.firebase:firebase-auth:23.1.0")
+  implementation("com.google.firebase:firebase-auth")
   implementation("com.google.firebase:firebase-firestore")
 
   "ksp"(libs.androidx.room.compiler)
