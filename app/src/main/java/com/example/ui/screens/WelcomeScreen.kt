@@ -847,7 +847,7 @@ fun WelcomeScreen(
 
                                 Button(
                                     onClick = {
-                                        if (otpInput.trim() == generatedOtp || otpInput.trim() == "112233") {
+                                        if (viewModel.verifyOtp(otpInput.trim())) {
                                             if (isPasswordResetFlow) {
                                                 viewModel.setAuthStep(AuthStep.PASSWORD_SETUP)
                                             } else {
@@ -861,7 +861,7 @@ fun WelcomeScreen(
                                                  }
                                              }
                                         } else {
-                                            viewModel.setAuthError("ভুল ভেরিফিকেশন কোড! দয়া করে সঠিক কোডটি দিন।")
+                                            // Error handled inside verifyOtp
                                         }
                                     },
                                     shape = RoundedCornerShape(16.dp),

@@ -209,7 +209,7 @@ fun ProfileSetupScreen(
                             size = 64.dp,
                             borderWidth = if (isSelected) 4.dp else 1.dp,
                             borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray,
-                            customAvatarUrl = customAvatarUrl
+                            customAvatarUrl = null
                         )
                         if (isSelected) {
                             Box(
