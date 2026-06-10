@@ -52,15 +52,28 @@ android {
       signingConfig = signingConfigs.getByName("debugConfig")
     }
   }
+
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
   }
+
   buildFeatures {
     compose = true
     buildConfig = true
   }
-  testOptions { unitTests { isIncludeAndroidResources = true } }
+
+  testOptions { 
+    unitTests { 
+      isIncludeAndroidResources = true 
+    } 
+  }
+
+  // Build outputs configuration
+  bundle {
+    densityFilters.clear()
+    densityFilters.addAll(listOf("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"))
+  }
 }
 
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
