@@ -1,0 +1,93 @@
+name: Fast Android APK Build & Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+# Cancel previous runs for the same branch/PR to save build quota and time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-apk:
+    name: Build & Package APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1 # Shallow clone for faster checkout
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      # Official Gradle Setup with Supercharged Build Cache & Daemon Acceleration
+      - name: Setup Gradle Cache
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: wrapper
+          cache-read-only: false
+          # Caches downloaded dependencies, wrapper, build cache, and configuration cache
+          gradle-home-cache-cleanup: true
+
+      # Setup Android SDK Cache
+      - name: Cache Android Build Tools & Outputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/build-cache
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            app/build/intermediates
+          key: ${{ runner.os }}-android-build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-android-build-
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x gradlew
+
+      # Ultra-fast assembly bypassing heavy linting/unit tests for lightning speed
+      - name: Fast Assemble Debug APK
+        run: |
+          ./gradlew assembleDebug \
+            --build-cache \
+            --parallel \
+            --configuration-cache \
+            --max-workers=4 \
+            -Dorg.gradle.caching=true \
+            -Dorg.gradle.parallel=true \
+            -x test \
+            -x lint \
+            -x lintVitalRelease
+
+      - name: Locate Generated APK
+        id: apk-path
+        run: |
+          APK_FILE=$(find app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            APK_FILE=$(find . -name "*.apk" | head -n 1)
+          fi
+          echo "Found APK: $APK_FILE"
+          echo "apk_file=$APK_FILE" >> $GITHUB_OUTPUT
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoktoBondhu-Debug-APK
+          path: ${{ steps.apk-path.outputs.apk_file }}
+          retention-days: 14
+          if-no-files-found: error
