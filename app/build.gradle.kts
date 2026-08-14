@@ -120,9 +120,9 @@ dependencies {
   androidTestImplementation(libs.androidx.runner)
   debugImplementation(libs.androidx.compose.ui.test.manifest)
   debugImplementation(libs.androidx.compose.ui.tooling)
-  implementation("androidx.credentials:credentials:1.2.2")
-  implementation("androidx.credentials:credentials-play-services-auth:1.2.2")
-  implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+  // implementation("androidx.credentials:credentials:1.2.2")
+  // implementation("androidx.credentials:credentials-play-services-auth:1.2.2")
+  // implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
   implementation("com.google.firebase:firebase-auth:23.1.0")
   implementation("com.google.firebase:firebase-firestore")
 
