@@ -296,7 +296,7 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
             firestore.collection("donors")
                 .addSnapshotListener { snapshots, e ->
                     if (e != null) {
-                        Log.e("BloodViewModel", "Firestore sync error", e)
+                        Log.d("BloodViewModel", "Firestore donors sync inactive (using local database): ${e.message}")
                         return@addSnapshotListener
                     }
                     if (snapshots != null) {
@@ -344,7 +344,7 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
             firestore.collection("blood_requests")
                 .addSnapshotListener { snapshots, e ->
                     if (e != null) {
-                        Log.e("BloodViewModel", "Firestore requests sync error", e)
+                        Log.d("BloodViewModel", "Firestore requests sync inactive (using local database): ${e.message}")
                         return@addSnapshotListener
                     }
                     if (snapshots != null) {
@@ -390,7 +390,7 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
         } catch (e: Exception) {
-            Log.w("BloodViewModel", "Firestore not configured or unavailable: ${e.message}")
+            Log.d("BloodViewModel", "Firestore unavailable, using local SQLite: ${e.message}")
         }
     }
 
@@ -856,8 +856,11 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                 "timestamp" to System.currentTimeMillis()
             )
             firestore.collection("donors").document(donor.email).set(donorMap)
+                .addOnFailureListener { e ->
+                    Log.d("BloodViewModel", "Cloud sync skipped: ${e.message}")
+                }
         } catch (e: Exception) {
-            Log.e("BloodViewModel", "Upload profile failed: ${e.message}")
+            Log.d("BloodViewModel", "Cloud upload skipped: ${e.message}")
         }
     }
 
@@ -910,8 +913,11 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
                 "timestamp" to request.timestamp
             )
             firestore.collection("blood_requests").add(reqMap)
+                .addOnFailureListener { e ->
+                    Log.d("BloodViewModel", "Request cloud sync skipped: ${e.message}")
+                }
         } catch (e: Exception) {
-            Log.e("BloodViewModel", "Upload request failed: ${e.message}")
+            Log.d("BloodViewModel", "Request cloud upload skipped: ${e.message}")
         }
     }
 

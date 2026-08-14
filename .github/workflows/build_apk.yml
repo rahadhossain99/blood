@@ -33,37 +33,30 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
       # Official Gradle Setup with Supercharged Build Cache & Daemon Acceleration
-      - name: Setup Gradle Cache
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: wrapper
+          gradle-version: '8.10.2'
           cache-read-only: false
-          # Caches downloaded dependencies, wrapper, build cache, and configuration cache
           gradle-home-cache-cleanup: true
 
-      # Setup Android SDK Cache
-      - name: Cache Android Build Tools & Outputs
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.android/build-cache
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            app/build/intermediates
-          key: ${{ runner.os }}-android-build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-android-build-
-
-      - name: Grant Execute Permission for Gradlew
-        run: chmod +x gradlew
+      - name: Ensure Execution Permissions
+        run: |
+          if [ -f "gradlew" ]; then
+            chmod +x gradlew
+          fi
 
       # Ultra-fast assembly bypassing heavy linting/unit tests for lightning speed
       - name: Fast Assemble Debug APK
         run: |
-          ./gradlew assembleDebug \
+          BUILD_CMD="gradle"
+          if [ -f "./gradlew" ]; then
+            BUILD_CMD="./gradlew"
+          fi
+          
+          $BUILD_CMD assembleDebug \
             --build-cache \
             --parallel \
             --configuration-cache \
@@ -77,9 +70,9 @@ jobs:
       - name: Locate Generated APK
         id: apk-path
         run: |
-          APK_FILE=$(find app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          APK_FILE=$(find app/build/outputs/apk/debug -name "*.apk" 2>/dev/null | head -n 1)
           if [ -z "$APK_FILE" ]; then
-            APK_FILE=$(find . -name "*.apk" | head -n 1)
+            APK_FILE=$(find . -name "*.apk" 2>/dev/null | head -n 1)
           fi
           echo "Found APK: $APK_FILE"
           echo "apk_file=$APK_FILE" >> $GITHUB_OUTPUT
