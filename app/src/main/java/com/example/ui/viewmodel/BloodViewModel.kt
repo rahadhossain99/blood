@@ -122,6 +122,21 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
         return System.currentTimeMillis() - _otpCreatedAt.value > 5 * 60 * 1000 // 5 minutes expiration
     }
 
+    fun getOtpRemainingSeconds(email: String): Long {
+        val lastSent = otpSendTimes[email.lowercase().trim()] ?: 0L
+        val elapsed = (System.currentTimeMillis() - lastSent) / 1000
+        val remaining = 60 - elapsed
+        return if (remaining > 0) remaining else 0L
+    }
+
+    fun getOtpExpiryRemainingSeconds(): Long {
+        val createdAt = _otpCreatedAt.value
+        if (createdAt == 0L) return 0L
+        val elapsed = (System.currentTimeMillis() - createdAt) / 1000
+        val remaining = (5 * 60) - elapsed
+        return if (remaining > 0) remaining else 0L
+    }
+
     fun incrementOtpAttempts() {
         _otpAttempts.value += 1
     }
@@ -136,7 +151,57 @@ class BloodViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun isValidEmail(email: String): Boolean {
-        return android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
+        val clean = email.trim()
+        return clean.contains("@") && clean.contains(".") && android.util.Patterns.EMAIL_ADDRESS.matcher(clean).matches()
+    }
+
+    fun setRememberMe(email: String, enabled: Boolean) {
+        authPrefs.edit()
+            .putBoolean("remember_me_enabled", enabled)
+            .putString("remembered_email", if (enabled) email.lowercase().trim() else "")
+            .apply()
+    }
+
+    fun isRememberMeEnabled(): Boolean {
+        return authPrefs.getBoolean("remember_me_enabled", true)
+    }
+
+    fun getRememberedEmail(): String {
+        return if (isRememberMeEnabled()) {
+            authPrefs.getString("remembered_email", "") ?: ""
+        } else ""
+    }
+
+    fun resendVerificationCode(onResult: (Boolean) -> Unit) {
+        val email = _authEmail.value
+        if (email.isBlank()) {
+            _authErrorMsg.value = "অনুগ্রহ করে ইমেইল এড্রেস প্রদান করুন।"
+            onResult(false)
+            return
+        }
+        if (!canSendOtp(email)) {
+            val remainSeconds = getOtpRemainingSeconds(email)
+            _authErrorMsg.value = "নতুন কোড পাঠানোর জন্য দয়া করে $remainSeconds সেকেন্ড অপেক্ষা করুন।"
+            onResult(false)
+            return
+        }
+
+        _authIsLoading.value = true
+        _authErrorMsg.value = null
+        val randomOtp = (100000..999999).random().toString()
+        _generatedOtp.value = randomOtp
+        _otpCreatedAt.value = System.currentTimeMillis()
+        _otpAttempts.value = 0
+        otpSendTimes[email] = System.currentTimeMillis()
+
+        viewModelScope.launch {
+            val isEmailSent = EmailSender.sendOtp(email, randomOtp)
+            _authIsLoading.value = false
+            if (!isEmailSent) {
+                _authErrorMsg.value = "সার্ভার থেকে সরাসরি কোড পাঠাতে দীর্ঘ সময় লাগছে। অনুগ্রহ করে আপনার ইনবক্স বা স্প্যাম ফোল্ডার চেক করুন।"
+            }
+            onResult(true)
+        }
     }
 
     fun verifyOtp(enteredOtp: String): Boolean {
